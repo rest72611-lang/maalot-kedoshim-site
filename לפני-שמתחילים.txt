@@ -1,0 +1,30 @@
+מעלות קדושים — תיקייה מוכנה ל-Codex
+
+הקבצים כבר ממוינים ושמם הוחלף לשמות חד-משמעיים כדי שקודקס לא יצטרך לנחש.
+
+מבנה:
+
+maalot-kedoshim/
+├── CODEX_ASSETS.md
+└── assets/
+    ├── images/
+    │   ├── hero-sign.png
+    │   ├── logo.pdf
+    │   ├── benizri.jpg
+    │   └── donation-qr.png
+    └── notices/
+        └── bar-mitzvah.pdf
+
+מה עושים עכשיו:
+
+1. חלץ את ה-ZIP.
+2. פתח ב-Codex את כל התיקייה `maalot-kedoshim`.
+3. אל תפתח רק את `assets`.
+4. הדבק את פרומפט 1.
+5. בפרומפט 1 אפשר להפנות את Codex ל-`CODEX_ASSETS.md` כמפת הנכסים המחייבת.
+
+לתשומת לב:
+- `logo.pdf` נשמר כמקור המקורי.
+- מודעות PDF נשמרות ב-`assets/notices`.
+- תמונת ה-QR זוהתה ושמה `donation-qr.png`.
+- אין כאן עדיין קוד אתר; זו הכנת הפרויקט בלבד.

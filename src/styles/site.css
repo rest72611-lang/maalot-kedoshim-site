@@ -1,0 +1,692 @@
+/* ==========================================================================
+   1. Design tokens
+   ========================================================================== */
+
+:root {
+  /* Color system — warm, restrained, inspired by the synagogue identity
+     (deep purple wordmark, warm amber/terracotta accent). */
+  --color-bg: #fbf7f0;
+  --color-surface: #ffffff;
+  --color-text: #2a2024;
+  --color-text-muted: #5c5058;
+  --color-border: #e6dcd0;
+  --color-primary: #4c2451;
+  --color-accent: #b5541f;
+  --color-link: var(--color-primary);
+  --color-focus: #b45309;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-section: clamp(2.5rem, 2rem + 2vw, 4rem);
+
+  /* Shared content grid */
+  --content-max: 64rem;
+  --page-gutter: clamp(1rem, 4vw, 2.5rem);
+
+  /* Elevation */
+  --shadow-soft: 0 12px 24px -16px rgba(42, 32, 36, 0.28);
+}
+
+/* ==========================================================================
+   2. Reset / base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  direction: rtl;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+main {
+  flex: 1 1 auto;
+}
+
+img,
+picture {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* ==========================================================================
+   3. Typography
+   ========================================================================== */
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Noto Sans Hebrew",
+    "Arial Hebrew",
+    Arial,
+    sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-block: 0 var(--space-3);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.5rem + 1.6vw, 2.75rem);
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: clamp(1.375rem, 1.2rem + 1vw, 2rem);
+}
+
+h3 {
+  font-size: clamp(1.125rem, 1.05rem + 0.5vw, 1.5rem);
+}
+
+h4 {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+}
+
+p {
+  margin-block: 0 var(--space-4);
+  max-inline-size: 68ch;
+}
+
+small {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+a {
+  color: var(--color-link);
+  text-underline-offset: 0.15em;
+}
+
+/* ==========================================================================
+   4. Layout primitives
+   ========================================================================== */
+
+.container {
+  width: min(100% - (var(--page-gutter) * 2), var(--content-max));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--space-section);
+}
+
+/* ==========================================================================
+   5. Accessibility
+   ========================================================================== */
+
+.skip-link {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-surface);
+  background: var(--color-text);
+  transform: translateY(-150%);
+  z-index: 1;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   6. Shared header / nav
+   ========================================================================== */
+
+.site-header {
+  background: var(--color-surface);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.site-header .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-4);
+}
+
+.site-name {
+  font-weight: 700;
+  font-size: clamp(1.125rem, 1.05rem + 0.5vw, 1.375rem);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+}
+
+nav a {
+  display: inline-block;
+  padding-block: var(--space-1);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+nav a:hover,
+nav a:focus-visible {
+  text-decoration: underline;
+}
+
+nav a[aria-current="page"] {
+  color: var(--color-primary);
+  font-weight: 700;
+  border-block-end: 2px solid var(--color-accent);
+}
+
+/* ==========================================================================
+   7. Shared footer
+   ========================================================================== */
+
+.site-footer {
+  background: var(--color-surface);
+  border-block-start: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.site-footer .container {
+  padding-block: var(--space-4);
+  text-align: center;
+  font-size: 0.9375rem;
+}
+
+.site-footer p {
+  margin-block-end: 0;
+  max-inline-size: none;
+}
+
+/* ==========================================================================
+   8. Prayer-times page
+   ========================================================================== */
+
+.schedule-section + .schedule-section {
+  margin-block-start: var(--space-section);
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-block-start: var(--space-4);
+}
+
+.schedule-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.schedule-item:last-child {
+  border-block-end: none;
+}
+
+.schedule-name {
+  font-weight: 600;
+}
+
+.schedule-time {
+  color: var(--color-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.schedule-item--no-time .schedule-name {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.holiday {
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: 1px solid var(--color-border);
+}
+
+.holiday:first-of-type {
+  margin-block-start: var(--space-5);
+  padding-block-start: 0;
+  border-block-start: none;
+}
+
+.holiday-day {
+  margin-block-start: var(--space-5);
+}
+
+.holiday-day-header {
+  margin-block-end: var(--space-2);
+}
+
+.day-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.schedule-note {
+  margin-block: var(--space-3) 0;
+  padding-inline-start: var(--space-3);
+  border-inline-start: 3px solid var(--color-accent);
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+/* ==========================================================================
+   9. Home hero
+   ========================================================================== */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* Bottom padding is intentionally 0: the sign runs full-bleed to the end
+     of the Hero, and the next section supplies its own top padding. */
+  padding-block: clamp(1.5rem, 1rem + 2vw, 2.5rem) 0;
+}
+
+.hero-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.hero-logo {
+  inline-size: clamp(5rem, 18vw, 9rem);
+  flex-shrink: 0;
+}
+
+.hero-title {
+  margin: 0;
+}
+
+/* Full-bleed by design: a direct child of .hero (not .container), sized as
+   100% of that block parent — never 100vw — so it can never exceed the
+   viewport or trigger a scrollbar-width overflow. */
+.hero-sign {
+  inline-size: 100%;
+  aspect-ratio: 1297 / 571;
+}
+
+/* Row layout only once there is enough width for the logo and title to sit
+   side by side without crowding. */
+@media (min-width: 48rem) {
+  .hero-identity {
+    flex-direction: row;
+    align-items: center;
+    text-align: start;
+    gap: var(--space-4);
+  }
+}
+
+/* ==========================================================================
+   10. Home intro
+   ========================================================================== */
+
+.home-intro {
+  background: var(--color-surface);
+  /* Subtle warm tint mixed from existing tokens only — falls back to the
+     plain surface color above if color-mix() is unsupported. */
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-primary) 8%);
+}
+
+.home-intro-text {
+  max-inline-size: 40rem;
+  margin-inline: auto;
+  animation: home-intro-fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-intro-text::before {
+  content: "";
+  display: block;
+  inline-size: 3rem;
+  block-size: 3px;
+  margin-inline: auto;
+  margin-block-end: var(--space-4);
+  background: var(--color-accent);
+  border-radius: 999px;
+  animation: home-intro-accent-in 500ms cubic-bezier(0.22, 1, 0.36, 1) 200ms both;
+}
+
+.home-intro-lead {
+  display: block;
+  margin-block-end: var(--space-3);
+  color: var(--color-primary);
+  font-size: clamp(1.375rem, 1.15rem + 1.2vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.home-intro-rest {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  line-height: 1.75;
+}
+
+@keyframes home-intro-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.125rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-intro-accent-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Restrained hover/focus interaction. The entrance animations above already
+   own `transform` on .home-intro-text and its ::before accent (held via
+   animation-fill-mode: both), so a competing :hover transform on either of
+   those elements would be silently overridden. To avoid that conflict, the
+   lift transform lives on the wrapper (.home-intro-content, which has no
+   entrance animation of its own), the accent grows via `inline-size` rather
+   than `transform`, and only the lead's `color` is touched directly. */
+@media (hover: hover) and (pointer: fine) {
+  .home-intro-content {
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-intro-lead {
+    transition: color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-intro-text::before {
+    transition: inline-size 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .home-intro-content:hover,
+  .home-intro-content:focus-within {
+    transform: translateY(-0.1875rem);
+  }
+
+  .home-intro-content:hover .home-intro-lead,
+  .home-intro-content:focus-within .home-intro-lead {
+    color: color-mix(in srgb, var(--color-primary) 85%, black 15%);
+  }
+
+  .home-intro-content:hover .home-intro-text::before,
+  .home-intro-content:focus-within .home-intro-text::before {
+    inline-size: 3.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-intro-content:hover,
+  .home-intro-content:focus-within {
+    transform: none;
+  }
+
+  .home-intro-content:hover .home-intro-text::before,
+  .home-intro-content:focus-within .home-intro-text::before {
+    inline-size: 3rem;
+  }
+}
+
+/* ==========================================================================
+   11. Home notices
+   ========================================================================== */
+
+.notices-section {
+  background: var(--color-bg);
+  /* Subtle warm tint mixed from existing tokens only — falls back to the
+     plain page background above if color-mix() is unsupported. */
+  background: color-mix(in srgb, var(--color-bg) 94%, var(--color-accent) 6%);
+}
+
+.notices-heading {
+  position: relative;
+  display: inline-block;
+  padding-block-end: var(--space-2);
+}
+
+.notices-heading::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: 0;
+  inline-size: 3rem;
+  block-size: 3px;
+  background: var(--color-accent);
+  border-radius: 999px;
+}
+
+.notices-grid {
+  display: grid;
+  /* min(100%, 22rem) keeps a single narrow phone from ever being asked for
+     more width than it has — auto-fit alone would overflow near 320px. The
+     26rem cap stops a lone portrait notice from stretching across the full
+     desktop content width. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 26rem));
+  justify-content: center;
+  gap: var(--space-6);
+  margin-block-start: var(--space-5);
+}
+
+.notice-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.notice-image {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.notice-link {
+  display: inline-block;
+  margin-block-start: var(--space-3);
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .notice-figure {
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .notice-figure:hover {
+    transform: translateY(-0.1875rem);
+    box-shadow: 0 20px 32px -16px rgba(42, 32, 36, 0.35);
+  }
+}
+
+/* ==========================================================================
+   12. Home activity
+   ========================================================================== */
+
+.activity-heading {
+  position: relative;
+  display: inline-block;
+  padding-block-end: var(--space-2);
+}
+
+.activity-heading::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: 0;
+  inline-size: 3rem;
+  block-size: 3px;
+  background: var(--color-accent);
+  border-radius: 999px;
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 26rem));
+  justify-content: center;
+  margin-block-start: var(--space-5);
+}
+
+.activity-figure {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.activity-image {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.activity-caption {
+  padding: var(--space-3);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .activity-figure {
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .activity-figure:hover {
+    transform: translateY(-0.1875rem);
+    box-shadow: 0 20px 32px -16px rgba(42, 32, 36, 0.35);
+  }
+}
+
+/* ==========================================================================
+   13. Home donations
+   ========================================================================== */
+
+.donations-heading {
+  position: relative;
+  display: inline-block;
+  padding-block-end: var(--space-2);
+}
+
+.donations-heading::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: 0;
+  inline-size: 3rem;
+  block-size: 3px;
+  background: var(--color-accent);
+  border-radius: 999px;
+}
+
+/* The QR itself is never transformed/filtered/hovered — only this
+   surrounding frame may receive restrained visual treatment. */
+.donation-qr-wrap {
+  max-inline-size: 34rem;
+  margin-inline: auto;
+  margin-block-start: var(--space-5);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+
+.donation-qr-image {
+  inline-size: min(100%, 28rem);
+  block-size: auto;
+  margin-inline: auto;
+}
