@@ -44,8 +44,6 @@ jobs:
         run: npm ci
 
       - name: Build site
-        env:
-          SITE_BASE_PATH: /maalot-kedoshim-site/
         run: npm run build
 
       - name: Upload Pages artifact

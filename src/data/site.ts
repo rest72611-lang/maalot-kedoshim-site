@@ -26,6 +26,7 @@ export const site: SiteInfo = {
   dir: "rtl",
   description: "אתר רשמי לבית הכנסת מעלות קדושים ברמת גן.",
   basePath: resolveBasePath(),
+  productionOrigin: "https://maalotkedoshim.co.il",
 };
 
 function resolveBasePath(): string {
