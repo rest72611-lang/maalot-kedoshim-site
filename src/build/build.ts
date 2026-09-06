@@ -48,6 +48,18 @@ async function build(): Promise<void> {
 
   await writeRobotsTxt(paths);
   await writeSitemap(paths);
+  await writeSearchConsoleVerification(paths);
+}
+
+const GOOGLE_SITE_VERIFICATION_FILENAME = "google9320aa7512ef0293.html";
+const GOOGLE_SITE_VERIFICATION_CONTENT = `google-site-verification: ${GOOGLE_SITE_VERIFICATION_FILENAME}\n`;
+
+async function writeSearchConsoleVerification({ distDir }: BuildPaths): Promise<void> {
+  await writeFile(
+    path.join(distDir, GOOGLE_SITE_VERIFICATION_FILENAME),
+    GOOGLE_SITE_VERIFICATION_CONTENT,
+    "utf8",
+  );
 }
 
 const SITE_PATHS = ["/", "/zmanim/"] as const;
