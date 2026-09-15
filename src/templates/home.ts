@@ -1,24 +1,30 @@
 import type { ActivityImage } from "../build/activity.js";
 import type { FixedAssets } from "../build/fixed-assets.js";
 import type { NoticeAsset, NoticePage } from "../build/notices.js";
+import type { PopupAsset } from "../build/popup.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
+import { renderPopup } from "./popup.js";
 import { escapeHtml } from "./utils.js";
 
 const HOME_INTRO_LEAD = "מחפש מקום לתפילה, לשיעור או פשוט שעה טובה של תורה באמצע היום?";
 const HOME_INTRO_REST =
   'במעלות קדושים תמיד קורה משהו. תפילות ושיעורים לאורך כל היום, באווירה חמה, ביתית ונגישה ברמת גן. לא צריך להכיר אף אחד ולא צריך להיות "מהקבועים" — פשוט נכנסים, מצטרפים ומרגישים בבית.';
+const HOME_PAGE_DESCRIPTION =
+  "האתר הרשמי של בית הכנסת מעלות קדושים: זמני תפילות, זמני היום, מודעות, עדכונים ופעילות קהילתית בתקופת חרבות ברזל.";
 
 export function renderHomePage({
   site,
   notices,
   activityImages,
   fixedAssets,
+  popup,
 }: {
   site: SiteInfo;
   notices: NoticeAsset[];
   activityImages: ActivityImage[];
   fixedAssets: FixedAssets;
+  popup: PopupAsset | null;
 }): string {
   const noticeItems =
     notices.length > 0
@@ -32,6 +38,7 @@ export function renderHomePage({
   return renderLayout({
     site,
     title: site.name,
+    description: HOME_PAGE_DESCRIPTION,
     currentPath: "/",
     body: `      <section class="hero" aria-labelledby="home-hero-title">
         <div class="container hero-identity">
@@ -68,7 +75,8 @@ ${activityItems}
             <img class="donation-qr-image" src="${escapeHtml(fixedAssets.donationQr.url)}" width="${fixedAssets.donationQr.width}" height="${fixedAssets.donationQr.height}" alt="קוד QR לתרומות לבית המדרש מעלות קדושים" loading="lazy">
           </div>
         </div>
-      </section>`,
+      </section>
+${popup ? renderPopup(popup) : ""}`,
   });
 }
 

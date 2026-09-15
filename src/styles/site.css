@@ -690,3 +690,94 @@ nav a[aria-current="page"] {
   block-size: auto;
   margin-inline: auto;
 }
+
+/* ==========================================================================
+   14. Home announcement popup
+   ========================================================================== */
+
+body.popup-open {
+  overflow: hidden;
+}
+
+.popup-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: 0 24px 48px -20px rgba(42, 32, 36, 0.45);
+  max-inline-size: min(92vw, 32rem);
+  max-block-size: min(90vh, 44rem);
+  overflow: visible;
+}
+
+.popup-dialog::backdrop {
+  background: rgba(20, 14, 18, 0.6);
+}
+
+.popup-image-wrap {
+  max-block-size: min(90vh, 44rem);
+  overflow: auto;
+  border-radius: inherit;
+}
+
+.popup-image {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: inherit;
+}
+
+.popup-close {
+  position: absolute;
+  inset-block-start: -0.75rem;
+  inset-inline-end: -0.75rem;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  z-index: 1;
+}
+
+.popup-close:hover,
+.popup-close:focus-visible {
+  color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup-dialog {
+    opacity: 0;
+    transform: scale(0.96) translateY(0.5rem);
+    transition:
+      opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .popup-dialog.popup-visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 30rem) {
+  .popup-dialog {
+    max-inline-size: 94vw;
+    max-block-size: 92vh;
+  }
+
+  .popup-close {
+    inset-block-start: 0.5rem;
+    inset-inline-end: 0.5rem;
+  }
+}
