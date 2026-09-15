@@ -1,3 +1,4 @@
+import type { ActivityImage } from "../build/activity.js";
 import type { FixedAssets } from "../build/fixed-assets.js";
 import type { NoticeAsset, NoticePage } from "../build/notices.js";
 import type { SiteInfo } from "../data/site.js";
@@ -11,16 +12,22 @@ const HOME_INTRO_REST =
 export function renderHomePage({
   site,
   notices,
+  activityImages,
   fixedAssets,
 }: {
   site: SiteInfo;
   notices: NoticeAsset[];
+  activityImages: ActivityImage[];
   fixedAssets: FixedAssets;
 }): string {
   const noticeItems =
     notices.length > 0
       ? notices.map(renderNoticeItem).join("\n")
       : "          <li>אין מודעות להצגה כרגע.</li>";
+  const activityItems =
+    activityImages.length > 0
+      ? activityImages.map(renderActivityItem).join("\n")
+      : "            <p>אין תמונות להצגה כרגע.</p>";
 
   return renderLayout({
     site,
@@ -50,10 +57,7 @@ ${noticeItems}
         <div class="container">
           <h2 class="activity-heading">מהנעשה בבית המדרש</h2>
           <div class="activity-grid">
-            <figure class="activity-figure">
-              <img class="activity-image" src="${escapeHtml(fixedAssets.benizri.url)}" width="${fixedAssets.benizri.width}" height="${fixedAssets.benizri.height}" alt="הרב שלמה בניזרי בבית הכנסת מעלות קדושים" loading="lazy">
-              <figcaption class="activity-caption">הרב שלמה בניזרי במעלות קדושים</figcaption>
-            </figure>
+${activityItems}
           </div>
         </div>
       </section>
@@ -66,6 +70,12 @@ ${noticeItems}
         </div>
       </section>`,
   });
+}
+
+function renderActivityItem(image: ActivityImage): string {
+  return `            <figure class="activity-figure">
+              <img class="activity-image" src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" loading="lazy">
+            </figure>`;
 }
 
 function renderNoticeItem(notice: NoticeAsset): string {

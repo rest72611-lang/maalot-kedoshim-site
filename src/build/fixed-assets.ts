@@ -14,7 +14,6 @@ export type FixedAssetImage = {
 
 export type FixedAssets = {
   heroSign: FixedAssetImage;
-  benizri: FixedAssetImage;
   donationQr: FixedAssetImage;
   logo: FixedAssetImage;
 };
@@ -30,14 +29,13 @@ export async function buildFixedAssets({
   assetsImagesDir,
   basePath,
 }: FixedAssetPaths): Promise<FixedAssets> {
-  const [heroSign, benizri, donationQr, logo] = await Promise.all([
+  const [heroSign, donationQr, logo] = await Promise.all([
     describeCopiedImage(assetsImagesDir, "hero-sign.png", basePath),
-    describeCopiedImage(assetsImagesDir, "benizri.jpg", basePath),
     describeCopiedImage(assetsImagesDir, "donation-qr.png", basePath),
     renderLogoDerivative({ distDir, assetsImagesDir, basePath }),
   ]);
 
-  return { heroSign, benizri, donationQr, logo };
+  return { heroSign, donationQr, logo };
 }
 
 async function describeCopiedImage(

@@ -6,6 +6,7 @@ import { getPrayerSchedule, validatePrayerSchedule } from "../data/prayer-times.
 import { renderHomePage } from "../templates/home.js";
 import { renderPrayerTimesPage } from "../templates/prayer-times.js";
 import { buildFixedAssets } from "./fixed-assets.js";
+import { processActivityImages } from "./activity.js";
 import { processNotices } from "./notices.js";
 
 const projectRoot = process.cwd();
@@ -22,7 +23,6 @@ type BuildPaths = {
 const requiredImageAssets = [
   "hero-sign.png",
   "logo.pdf",
-  "benizri.jpg",
   "donation-qr.png",
 ] as const;
 
@@ -40,10 +40,11 @@ async function build(): Promise<void> {
     basePath: site.basePath,
   });
   const notices = await processNotices(paths);
+  const activityImages = await processActivityImages(paths);
   const prayerSchedule = getPrayerSchedule();
   validatePrayerSchedule(prayerSchedule);
 
-  await writeHtml("index.html", renderHomePage({ site, notices, fixedAssets }));
+  await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets }));
   await writeHtml("zmanim/index.html", renderPrayerTimesPage({ site, prayerSchedule }));
 
   await writeRobotsTxt(paths);

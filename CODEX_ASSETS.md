@@ -15,11 +15,6 @@ This folder is prepared intentionally. Do not guess the role of the files.
   - During implementation, create a web-friendly derivative if needed, but keep this original source file.
   - Do not redesign or recreate the logo.
 
-- `assets/images/benizri.jpg`
-  - Role: Photo for the activity section.
-  - Caption must be exactly:
-    `הרב שלמה בניזרי במעלות קדושים`
-
 - `assets/images/donation-qr.png`
   - Role: Donation QR graphic.
   - Do not crop, distort, blur, recolor, or aggressively compress it.
@@ -38,6 +33,17 @@ This folder is prepared intentionally. Do not guess the role of the files.
 
 Any additional notice PDF added to `assets/notices/` must be discovered automatically by the build process.
 Do not require a manually maintained list of notice filenames.
+
+## Activity gallery images
+
+- `assets/activity/benizri.jpg`
+  - Role: Photo for the "מהנעשה בבית המדרש" (home page activity) gallery.
+
+- Any `.jpg`, `.jpeg`, or `.png` file added to `assets/activity/` is discovered automatically at
+  build time and rendered as a grid item in the "מהנעשה בבית המדרש" section.
+  Do not require a manually maintained list of activity image filenames.
+- Images are copied at build time to `dist/assets/activity/`.
+- Display order follows the source filenames.
 
 ## Important
 
