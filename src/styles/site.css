@@ -708,7 +708,7 @@ body.popup-open {
   border-radius: 1rem;
   background: var(--color-surface);
   box-shadow: 0 24px 48px -20px rgba(42, 32, 36, 0.45);
-  max-inline-size: min(92vw, 32rem);
+  inline-size: min(92vw, 32rem);
   max-block-size: min(90vh, 44rem);
   overflow: visible;
 }
@@ -732,10 +732,10 @@ body.popup-open {
 
 .popup-close {
   position: absolute;
-  inset-block-start: -0.75rem;
-  inset-inline-end: -0.75rem;
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -772,12 +772,7 @@ body.popup-open {
 
 @media (max-width: 30rem) {
   .popup-dialog {
-    max-inline-size: 94vw;
+    inline-size: 94vw;
     max-block-size: 92vh;
-  }
-
-  .popup-close {
-    inset-block-start: 0.5rem;
-    inset-inline-end: 0.5rem;
   }
 }
