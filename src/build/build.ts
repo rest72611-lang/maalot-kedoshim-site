@@ -27,17 +27,21 @@ const requiredImageAssets = [
   "donation-qr.png",
 ] as const;
 
+const requiredDonationAssets = ["salvation-story.pdf"] as const;
+
 async function build(): Promise<void> {
   const paths: BuildPaths = { projectRoot, distDir, assetsDir, basePath: site.basePath };
 
   await cleanDist(paths);
   await validateRequiredAssets(paths);
   await copyFixedAssets(paths);
+  await copyDonationAssets(paths);
   await copyStyles(paths);
 
   const fixedAssets = await buildFixedAssets({
     distDir,
     assetsImagesDir: path.join(assetsDir, "images"),
+    assetsDonationsDir: path.join(assetsDir, "donations"),
     basePath: site.basePath,
   });
   const notices = await processNotices(paths);
@@ -47,7 +51,10 @@ async function build(): Promise<void> {
   validatePrayerSchedule(prayerSchedule);
 
   await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popups }));
-  await writeHtml("zmanim/index.html", renderPrayerTimesPage({ site, prayerSchedule }));
+  await writeHtml(
+    "zmanim/index.html",
+    renderPrayerTimesPage({ site, prayerSchedule, donationStoryCover: fixedAssets.donationStoryCover }),
+  );
 
   await writeRobotsTxt(paths);
   await writeSitemap(paths);
@@ -106,6 +113,13 @@ async function validateRequiredAssets({ assetsDir }: BuildPaths): Promise<void> 
     }
   }
 
+  for (const fileName of requiredDonationAssets) {
+    const sourcePath = path.join(assetsDir, "donations", fileName);
+    if (!(await fileExists(sourcePath))) {
+      missing.push(path.relative(projectRoot, sourcePath));
+    }
+  }
+
   if (missing.length > 0) {
     throw new Error(`Missing required source assets: ${missing.join(", ")}`);
   }
@@ -113,6 +127,12 @@ async function validateRequiredAssets({ assetsDir }: BuildPaths): Promise<void> 
 
 async function copyFixedAssets({ assetsDir, distDir }: BuildPaths): Promise<void> {
   await cp(path.join(assetsDir, "images"), path.join(distDir, "assets", "images"), {
+    recursive: true,
+  });
+}
+
+async function copyDonationAssets({ assetsDir, distDir }: BuildPaths): Promise<void> {
+  await cp(path.join(assetsDir, "donations"), path.join(distDir, "assets", "donations"), {
     recursive: true,
   });
 }

@@ -5,6 +5,7 @@ import type {
   PrayerSchedule,
   TimedItem,
 } from "../data/prayer-times.js";
+import type { FixedAssetImage } from "../build/fixed-assets.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
 import { escapeHtml } from "./utils.js";
@@ -16,15 +17,18 @@ const PAGE_DESCRIPTION =
 export function renderPrayerTimesPage({
   site,
   prayerSchedule,
+  donationStoryCover,
 }: {
   site: SiteInfo;
   prayerSchedule: PrayerSchedule;
+  donationStoryCover: FixedAssetImage;
 }): string {
   return renderLayout({
     site,
     title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,
     currentPath: "/zmanim/",
+    donationStoryCover,
     body: `      <section class="section prayer-page">
         <div class="container">
           <h1>זמני תפילות בבית המדרש</h1>

@@ -40,6 +40,7 @@ export function renderHomePage({
     title: site.name,
     description: HOME_PAGE_DESCRIPTION,
     currentPath: "/",
+    donationStoryCover: fixedAssets.donationStoryCover,
     body: `      <section class="hero" aria-labelledby="home-hero-title">
         <div class="container hero-identity">
           <img class="hero-logo" src="${escapeHtml(fixedAssets.logo.url)}" width="${fixedAssets.logo.width}" height="${fixedAssets.logo.height}" alt="לוגו בית הכנסת מעלות קדושים">
@@ -68,9 +69,9 @@ ${activityItems}
           </div>
         </div>
       </section>
-      <section class="section">
+      <section id="donations" class="section" aria-labelledby="donations-heading">
         <div class="container">
-          <h2 class="donations-heading">תרומות לבית המדרש</h2>
+          <h2 id="donations-heading" class="donations-heading">תרומות לבית המדרש</h2>
           <div class="donation-qr-wrap">
             <img class="donation-qr-image" src="${escapeHtml(fixedAssets.donationQr.url)}" width="${fixedAssets.donationQr.width}" height="${fixedAssets.donationQr.height}" alt="קוד QR לתרומות לבית המדרש מעלות קדושים" loading="lazy">
           </div>
