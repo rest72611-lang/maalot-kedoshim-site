@@ -613,6 +613,7 @@ nav a[aria-current="page"] {
 .activity-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 26rem));
+  align-items: start;
   justify-content: center;
   margin-block-start: var(--space-5);
 }
@@ -626,12 +627,16 @@ nav a[aria-current="page"] {
 }
 
 .activity-image {
+  display: block;
   inline-size: 100%;
-  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
 }
 
 .activity-caption {
+  margin: 0;
   padding: var(--space-3);
+  overflow-wrap: break-word;
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.9375rem;

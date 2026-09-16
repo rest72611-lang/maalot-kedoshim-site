@@ -81,8 +81,13 @@ ${popup ? renderPopup(popup) : ""}`,
 }
 
 function renderActivityItem(image: ActivityImage): string {
+  const caption =
+    image.caption.length > 0
+      ? `\n              <figcaption class="activity-caption">${escapeHtml(image.caption)}</figcaption>`
+      : "";
+
   return `            <figure class="activity-figure">
-              <img class="activity-image" src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" loading="lazy">
+              <img class="activity-image" src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" loading="lazy">${caption}
             </figure>`;
 }
 

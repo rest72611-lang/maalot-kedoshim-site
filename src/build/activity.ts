@@ -10,6 +10,7 @@ export type ActivityImage = {
   width: number;
   height: number;
   alt: string;
+  caption: string;
 };
 
 export type ActivityPaths = {
@@ -44,12 +45,14 @@ export async function processActivityImages({
     await cp(sourcePath, path.join(outputDir, entry.name));
 
     const dimensions = await readImageDimensions(sourcePath);
+    const caption = deriveCaption(entry.name);
 
     images.push({
       src: toPublicHref(basePath, ["assets", "activity", entry.name]),
       width: dimensions.width,
       height: dimensions.height,
-      alt: ACTIVITY_IMAGE_ALT,
+      alt: caption.length > 0 ? caption : ACTIVITY_IMAGE_ALT,
+      caption,
     });
   }
 
@@ -57,6 +60,11 @@ export async function processActivityImages({
 }
 
 const ACTIVITY_IMAGE_ALT = "מהנעשה בבית המדרש בבית הכנסת מעלות קדושים";
+
+function deriveCaption(fileName: string): string {
+  const base = path.basename(fileName, path.extname(fileName));
+  return base.replace(/\s*\(\d+\)\s*$/, "").trim();
+}
 
 async function pathExists(targetPath: string): Promise<boolean> {
   try {
