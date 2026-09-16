@@ -708,37 +708,30 @@ body.popup-open {
   position: fixed;
   inset: 0;
   margin: auto;
-  padding: 0;
+  padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   background: var(--color-surface);
   box-shadow: 0 24px 48px -20px rgba(42, 32, 36, 0.45);
-  inline-size: min(92vw, 32rem);
-  max-block-size: min(90vh, 44rem);
-  overflow: visible;
+  inline-size: min(92vw, 64rem);
+  max-inline-size: 92vw;
+  max-block-size: min(90vh, 48rem);
+  overflow: auto;
 }
 
 .popup-dialog::backdrop {
   background: rgba(20, 14, 18, 0.6);
 }
 
-.popup-image-wrap {
-  max-block-size: min(90vh, 44rem);
-  overflow: auto;
-  border-radius: inherit;
-}
-
-.popup-image {
-  display: block;
-  inline-size: 100%;
-  block-size: auto;
-  border-radius: inherit;
-}
-
+/* Sticky (not fixed/absolute) so the button scrolls with, and always sits
+   pinned atop, the dialog's own scroll container when there's too much
+   popup content to fit without scrolling. */
 .popup-close {
-  position: absolute;
-  inset-block-start: 0.5rem;
-  inset-inline-end: 0.5rem;
+  position: sticky;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  margin-inline-start: auto;
+  margin-block-end: var(--space-3);
   inline-size: 2.75rem;
   block-size: 2.75rem;
   display: flex;
@@ -760,6 +753,31 @@ body.popup-open {
   color: var(--color-accent);
 }
 
+/* Auto-fit handles any ad count: columns are added as space allows and
+   collapse to one column on narrow screens, with no per-count overrides. */
+.popup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+  justify-items: center;
+}
+
+.popup-item {
+  margin: 0;
+  inline-size: 100%;
+  max-inline-size: 24rem;
+}
+
+.popup-image {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  object-fit: contain;
+  border-radius: 0.75rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .popup-dialog {
     opacity: 0;
@@ -778,6 +796,8 @@ body.popup-open {
 @media (max-width: 30rem) {
   .popup-dialog {
     inline-size: 94vw;
+    max-inline-size: 94vw;
     max-block-size: 92vh;
+    padding: var(--space-4);
   }
 }

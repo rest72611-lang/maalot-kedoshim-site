@@ -2,17 +2,22 @@ import type { PopupAsset } from "../build/popup.js";
 import { escapeHtml } from "./utils.js";
 
 /**
- * Renders the homepage-only announcement popup: a native <dialog> (giving
- * us focus trapping, Escape-to-cancel and ::backdrop for free) plus the
- * small script that opens it shortly after load and manages the animated,
- * reduced-motion-aware close. Kept out of `layout.ts` so no other page ever
- * gets this markup.
+ * Renders the homepage-only announcement popup: a single native <dialog>
+ * (giving us focus trapping, Escape-to-cancel and ::backdrop for free)
+ * holding one `.popup-item` per announcement, plus the small script that
+ * opens it shortly after load and manages the animated, reduced-motion-aware
+ * close. Kept out of `layout.ts` so no other page ever gets this markup.
  */
-export function renderPopup(popup: PopupAsset): string {
-  return `      <dialog id="popup-dialog" class="popup-dialog" aria-label="מודעה מבית הכנסת מעלות קדושים">
-        <button type="button" id="popup-close" class="popup-close" aria-label="סגירת המודעה">×</button>
-        <div class="popup-image-wrap">
-          <img class="popup-image" src="${escapeHtml(popup.src)}" width="${popup.width}" height="${popup.height}" alt="${escapeHtml(popup.alt)}">
+export function renderPopup(popups: PopupAsset[]): string {
+  const isSingle = popups.length === 1;
+  const dialogLabel = isSingle ? "מודעה מבית הכנסת מעלות קדושים" : "מודעות מבית הכנסת מעלות קדושים";
+  const closeLabel = isSingle ? "סגירת המודעה" : "סגירת המודעות";
+  const items = popups.map(renderPopupItem).join("\n");
+
+  return `      <dialog id="popup-dialog" class="popup-dialog" aria-label="${escapeHtml(dialogLabel)}">
+        <button type="button" id="popup-close" class="popup-close" aria-label="${escapeHtml(closeLabel)}">×</button>
+        <div class="popup-grid">
+${items}
         </div>
       </dialog>
       <script>
@@ -83,4 +88,10 @@ export function renderPopup(popup: PopupAsset): string {
           window.setTimeout(openPopup, 400);
         })();
       </script>`;
+}
+
+function renderPopupItem(popup: PopupAsset): string {
+  return `          <figure class="popup-item">
+            <img class="popup-image" src="${escapeHtml(popup.src)}" width="${popup.width}" height="${popup.height}" alt="${escapeHtml(popup.alt)}">
+          </figure>`;
 }

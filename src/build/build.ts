@@ -8,7 +8,7 @@ import { renderPrayerTimesPage } from "../templates/prayer-times.js";
 import { buildFixedAssets } from "./fixed-assets.js";
 import { processActivityImages } from "./activity.js";
 import { processNotices } from "./notices.js";
-import { buildPopup } from "./popup.js";
+import { buildPopups } from "./popup.js";
 
 const projectRoot = process.cwd();
 const distDir = path.join(projectRoot, "dist");
@@ -42,11 +42,11 @@ async function build(): Promise<void> {
   });
   const notices = await processNotices(paths);
   const activityImages = await processActivityImages(paths);
-  const popup = await buildPopup(paths);
+  const popups = await buildPopups(paths);
   const prayerSchedule = getPrayerSchedule();
   validatePrayerSchedule(prayerSchedule);
 
-  await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popup }));
+  await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popups }));
   await writeHtml("zmanim/index.html", renderPrayerTimesPage({ site, prayerSchedule }));
 
   await writeRobotsTxt(paths);

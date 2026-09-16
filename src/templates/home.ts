@@ -18,13 +18,13 @@ export function renderHomePage({
   notices,
   activityImages,
   fixedAssets,
-  popup,
+  popups,
 }: {
   site: SiteInfo;
   notices: NoticeAsset[];
   activityImages: ActivityImage[];
   fixedAssets: FixedAssets;
-  popup: PopupAsset | null;
+  popups: PopupAsset[];
 }): string {
   const noticeItems =
     notices.length > 0
@@ -76,7 +76,7 @@ ${activityItems}
           </div>
         </div>
       </section>
-${popup ? renderPopup(popup) : ""}`,
+${popups.length > 0 ? renderPopup(popups) : ""}`,
   });
 }
 
