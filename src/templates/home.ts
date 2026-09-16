@@ -43,7 +43,7 @@ export function renderHomePage({
     body: `      <section class="hero" aria-labelledby="home-hero-title">
         <div class="container hero-identity">
           <img class="hero-logo" src="${escapeHtml(fixedAssets.logo.url)}" width="${fixedAssets.logo.width}" height="${fixedAssets.logo.height}" alt="לוגו בית הכנסת מעלות קדושים">
-          <h1 id="home-hero-title" class="hero-title">בית הכנסת מעלות קדושים – לזכר נופלי מלחמת חרבות ברזל</h1>
+          <h1 id="home-hero-title" class="hero-title">בית הכנסת מעלות קדושים לזכר קדושי מלחמת חרבות ברזל</h1>
         </div>
         <img class="hero-sign" src="${escapeHtml(fixedAssets.heroSign.url)}" width="${fixedAssets.heroSign.width}" height="${fixedAssets.heroSign.height}" alt="שלט הכניסה לבית הכנסת מעלות קדושים" fetchpriority="high">
       </section>
