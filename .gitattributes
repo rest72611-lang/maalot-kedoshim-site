@@ -1,0 +1,33 @@
+# Line-ending and binary handling.
+#
+# Text files are stored and checked out with LF on every platform, so a
+# Windows clone (core.autocrlf=true) matches the Linux CI build byte for byte.
+# Binary assets are never converted or diffed as text; without this, Git's
+# content heuristic can treat a PDF as text and rewrite its line endings.
+#
+# Rules are explicit per extension on purpose (no "* text=auto"), so a file
+# type that is not listed keeps Git's default behavior.
+
+# Text
+*.ts          text eol=lf
+*.js          text eol=lf
+*.css         text eol=lf
+*.html        text eol=lf
+*.json        text eol=lf
+*.md          text eol=lf
+*.txt         text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+.gitignore    text eol=lf
+.gitattributes text eol=lf
+
+# Binary
+*.pdf         binary
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.webp        binary
+*.gif         binary
+*.ico         binary
+*.mp4         binary
+*.woff2       binary
