@@ -1,9 +1,9 @@
 /**
  * Merges new media from the platform's public API into the home page
  * (P6.4): hides legacy items the admin hid, and adds published gallery
- * photos and notices. If the API is slow, down or returns something
- * unexpected, the page stays exactly as built. Videos and the popup join
- * with the carousels (P7).
+ * photos and notices, and fills the video carousel (P7.4). If the API is
+ * slow, down or returns something unexpected, the page stays exactly as
+ * built. The popup joins in P7.6.
  *
  * Runs only when the build sets PUBLIC_API_ORIGIN.
  */
@@ -51,8 +51,12 @@ async function mergeFeed(galleryElement: HTMLElement): Promise<void> {
     const notices = document.getElementById("notices-list");
     const newGallery: HTMLElement[] = [];
     const newNotices: HTMLElement[] = [];
+    const newVideos: HTMLElement[] = [];
     for (const item of feed.items) {
-      if (item.kind !== "image") {
+      if (item.kind === "video") {
+        if (item.placement === "video") {
+          newVideos.push(videoSlide(origin, item));
+        }
         continue;
       }
       const image = mediaImage(origin, item);
@@ -70,12 +74,100 @@ async function mergeFeed(galleryElement: HTMLElement): Promise<void> {
     // Newest first, ahead of the legacy items.
     galleryElement.prepend(...newGallery);
     notices?.prepend(...newNotices);
+    showVideos(newVideos);
     galleryElement.dataset["source"] = "live";
   } catch {
     galleryElement.dataset["source"] = "static";
   } finally {
     window.clearTimeout(timer);
   }
+}
+
+/**
+ * One video slide. preload="none" until the slide is near the screen, then
+ * "metadata": nothing heavy loads up front. Native controls give play,
+ * mute and full screen, accessibly.
+ */
+function videoSlide(origin: string, item: FeedItem): HTMLElement {
+  const video = document.createElement("video");
+  video.className = "video-player";
+  video.src = `${origin}${item.url}`;
+  video.controls = true;
+  video.preload = "none";
+  video.playsInline = true;
+  video.muted = true;
+  if (item.width && item.height) {
+    video.width = item.width;
+    video.height = item.height;
+  }
+  video.setAttribute("aria-label", item.caption ?? "סרטון מבית המדרש");
+  const figure = element("figure", "video-figure", [video]);
+  if (item.caption) {
+    figure.append(element("figcaption", "activity-caption", [item.caption]));
+  }
+  return figure;
+}
+
+/**
+ * Shows the video section and wires playback: a video on screen tries to
+ * play muted (browsers may refuse; the native play button then remains),
+ * only one plays at a time, and when one ends the carousel moves on.
+ * Nothing starts by itself under prefers-reduced-motion.
+ */
+function showVideos(slides: HTMLElement[]): void {
+  const section = document.getElementById("videos-section");
+  const track = document.getElementById("video-track");
+  if (!section || !track || slides.length === 0) {
+    return;
+  }
+  track.append(...slides);
+  section.hidden = false;
+
+  const videos = slides.map((slide) => slide.querySelector("video")!);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const video = entry.target as HTMLVideoElement;
+        if (entry.isIntersecting) {
+          if (video.preload === "none") {
+            video.preload = "metadata";
+          }
+          if (!reducedMotion && entry.intersectionRatio >= 0.6) {
+            video.play().catch(() => {
+              // Autoplay blocked (data saver, browser policy): the visitor
+              // can still press play on the native controls.
+              video.dataset["autoplay"] = "blocked";
+            });
+          }
+        } else if (!video.paused) {
+          video.pause();
+        }
+      }
+    },
+    { threshold: [0, 0.6] },
+  );
+
+  videos.forEach((video, index) => {
+    observer.observe(video);
+    video.addEventListener("play", () => {
+      for (const other of videos) {
+        if (other !== video && !other.paused) {
+          other.pause();
+        }
+      }
+    });
+    video.addEventListener("ended", () => {
+      const nextSlide = slides[(index + 1) % slides.length];
+      if (slides.length > 1 && nextSlide) {
+        const trackRect = track.getBoundingClientRect();
+        const rect = nextSlide.getBoundingClientRect();
+        const rtl = getComputedStyle(track).direction === "rtl";
+        track.scrollBy({ left: rtl ? rect.right - trackRect.right : rect.left - trackRect.left, behavior: reducedMotion ? "auto" : "smooth" });
+      }
+    });
+  });
 }
 
 function mediaImage(origin: string, item: FeedItem): HTMLImageElement {

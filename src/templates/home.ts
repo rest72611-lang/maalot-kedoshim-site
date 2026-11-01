@@ -78,7 +78,7 @@ ${activityItems}
           </div>
         </div>
       </section>
-      <section id="donations" class="section band-tint" aria-labelledby="donations-heading">
+${live ? renderVideoSection() : ""}      <section id="donations" class="section band-tint" aria-labelledby="donations-heading">
         <div class="container">
           <h2 id="donations-heading" class="donations-heading">תרומות לבית המדרש</h2>
           <div class="donation-cta-wrap">
@@ -96,6 +96,22 @@ ${activityItems}
 ${popups.length > 0 ? renderPopup(popups) : ""}
       <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/carousel.js"))}"></script>${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
   });
+}
+
+/**
+ * Videos only come from the platform API, so the section ships empty and
+ * hidden; media-feed-view.js fills it and shows it when there are videos.
+ */
+function renderVideoSection(): string {
+  return `      <section id="videos-section" class="section videos-section" aria-labelledby="videos-heading" hidden>
+        <div class="container">
+          <h2 id="videos-heading" class="activity-heading">סרטונים</h2>
+          <div class="carousel" data-carousel data-autoplay-ms="0" aria-labelledby="videos-heading">
+            <div id="video-track" class="carousel-track video-track"></div>
+          </div>
+        </div>
+      </section>
+`;
 }
 
 function legacyIdAttribute(live: boolean, legacyId: string): string {

@@ -188,3 +188,22 @@ describe("live prayer schedule in a real browser", () => {
     await page.context().close();
   });
 });
+
+describe("prayer times as cards (P7.5)", () => {
+  test("on a wide screen the weekday and Shabbat cards sit side by side; on a phone they stack", async () => {
+    apiMode = "ok";
+    for (const [width, sideBySide] of [[1280, true], [360, false]] as const) {
+      const context = await browser.newContext({ viewport: { width, height: 900 } });
+      const page = await context.newPage();
+      await page.goto(`${siteOrigin}/zmanim/`);
+      await page.waitForSelector("#prayer-schedule[data-source='live']");
+      const tops = await page.$$eval("#prayer-schedule > .schedule-section", (sections) =>
+        sections.slice(0, 2).map((section) => Math.round((section as unknown as { getBoundingClientRect(): { top: number } }).getBoundingClientRect().top)),
+      );
+      assert.equal(tops.length, 2);
+      assert.equal(tops[0] === tops[1], sideBySide, `width ${width}: tops ${tops.join(", ")}`);
+      await context.close();
+    }
+  });
+});
+

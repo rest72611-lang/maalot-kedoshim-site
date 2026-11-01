@@ -10,6 +10,8 @@
  * picked up automatically.
  *
  * Markup: <div data-carousel aria-label="…"><div class="carousel-track">slides…</div></div>
+ * data-autoplay-ms="0" turns auto-advance off (the video carousel advances
+ * when a video ends instead).
  */
 
 const DEFAULT_AUTOPLAY_MS = 6000;
@@ -26,6 +28,7 @@ function setUpCarousel(root: HTMLElement): void {
   }
   const rtl = getComputedStyle(track).direction === "rtl";
   const autoplayMs = Number(root.dataset["autoplayMs"] ?? DEFAULT_AUTOPLAY_MS);
+  const autoplayEnabled = autoplayMs > 0;
 
   const controls = element("div", "carousel-controls");
   const previous = button("carousel-button carousel-previous", "התמונה הקודמת", rtl ? "›" : "‹");
@@ -91,7 +94,7 @@ function setUpCarousel(root: HTMLElement): void {
       slide.setAttribute("aria-label", `${index + 1} מתוך ${all.length}`);
     });
     controls.hidden = all.length < 2;
-    pause.hidden = reducedMotion.matches;
+    pause.hidden = reducedMotion.matches || !autoplayEnabled;
     root.dataset["count"] = String(all.length);
     schedule();
   }
@@ -99,7 +102,7 @@ function setUpCarousel(root: HTMLElement): void {
   function schedule(): void {
     window.clearInterval(timer);
     timer = undefined;
-    const running = !userPaused && !interacting && visible && !reducedMotion.matches && !document.hidden && slides().length > 1;
+    const running = autoplayEnabled && !userPaused && !interacting && visible && !reducedMotion.matches && !document.hidden && slides().length > 1;
     root.dataset["autoplay"] = running ? "on" : "off";
     if (running) {
       timer = window.setInterval(() => goTo(currentIndex() + 1, false), autoplayMs);

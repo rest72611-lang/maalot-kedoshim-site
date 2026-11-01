@@ -19,10 +19,14 @@ const e2eDist = path.join(projectRoot, ".cache", "e2e-dist-media");
 const NEW_ID = "01JEXAMPLE0000000000000000";
 const NOTICE_ID = "01JEXAMPLE0000000000000001";
 
+const VIDEO_IDS = ["01JEXAMPLE0000000000000V01", "01JEXAMPLE0000000000000V02"];
+
 type Mode = "ok" | "error" | "hostile";
 let mode: Mode = "ok";
+let withVideos = false;
 let hiddenLegacyId = "";
 let png: Buffer;
+let mp4: Buffer;
 
 let apiServer: Server;
 let siteServer: Server;
@@ -35,6 +39,9 @@ function feed(): unknown {
     items: [
       { id: NEW_ID, kind: "image", placement: "gallery", width: 92, height: 92, caption, publishedAt: "2027-01-12T10:00:00Z", url: `/v1/media/${NEW_ID}` },
       { id: NOTICE_ID, kind: "image", placement: "notice", width: 92, height: 92, caption: null, publishedAt: "2027-01-11T10:00:00Z", url: `/v1/media/${NOTICE_ID}` },
+      ...(withVideos
+        ? VIDEO_IDS.map((id, index) => ({ id, kind: "video", placement: "video", width: 160, height: 90, caption: `סרטון ${index + 1}`, publishedAt: "2027-01-10T10:00:00Z", url: `/v1/media/${id}` }))
+        : []),
     ],
     hiddenLegacyIds: hiddenLegacyId ? [hiddenLegacyId] : [],
   };
@@ -47,6 +54,8 @@ before(async () => {
       response.writeHead(500, headers).end("{}");
     } else if (request.url === "/v1/media-feed") {
       response.writeHead(200, { ...headers, "Content-Type": "application/json" }).end(JSON.stringify(feed()));
+    } else if (request.url?.startsWith("/v1/media/01JEXAMPLE0000000000000V")) {
+      response.writeHead(200, { ...headers, "Content-Type": "video/mp4" }).end(mp4);
     } else if (request.url?.startsWith("/v1/media/")) {
       response.writeHead(200, { ...headers, "Content-Type": "image/png" }).end(png);
     } else {
@@ -60,6 +69,7 @@ before(async () => {
     env: { ...process.env, SITE_DIST_DIR: e2eDist, PUBLIC_API_ORIGIN: apiOrigin },
   });
   png = await readFile(path.join(e2eDist, "assets", "generated", "images", "logo.png"));
+  mp4 = await readFile(path.join(projectRoot, "test", "e2e", "fixtures", "sample.mp4"));
 
   siteServer = createServer(async (request, response) => {
     let filePath = path.join(e2eDist, decodeURIComponent(new URL(request.url ?? "/", "http://x").pathname));
@@ -93,8 +103,15 @@ async function listen(server: Server): Promise<string> {
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
-async function openHome(options: { javaScriptEnabled?: boolean } = {}): Promise<Page> {
-  const context = await browser.newContext({ javaScriptEnabled: options.javaScriptEnabled ?? true });
+async function openHome(options: { javaScriptEnabled?: boolean; reducedMotion?: boolean; blockAutoplay?: boolean } = {}): Promise<Page> {
+  const context = await browser.newContext({ javaScriptEnabled: options.javaScriptEnabled ?? true, reducedMotion: options.reducedMotion ? "reduce" : "no-preference" });
+  if (options.blockAutoplay) {
+    // What a browser that refuses autoplay does: play() rejects.
+    await context.addInitScript(() => {
+      const proto = (globalThis as unknown as { HTMLMediaElement: { prototype: { play: () => Promise<void> } } }).HTMLMediaElement.prototype;
+      proto.play = () => Promise.reject(new Error("NotAllowedError"));
+    });
+  }
   const page = await context.newPage();
   // The home page popup would cover the content; it is not under test here.
   await page.goto(`${siteOrigin}/`);
@@ -156,6 +173,83 @@ describe("new media merged into the home page", () => {
     const page = await openHome();
     assert.match(await page.locator("#activity-gallery figcaption").first().innerText(), /<img src=x/);
     assert.equal(await page.evaluate(() => (globalThis as { pwned?: number }).pwned), undefined);
+    await page.context().close();
+  });
+});
+
+type VideoLike = { paused: boolean; muted: boolean; playsInline: boolean; play(): Promise<void> };
+
+describe("video carousel (P7.4)", () => {
+  async function openWithVideos(options: { reducedMotion?: boolean; blockAutoplay?: boolean } = {}): Promise<Page> {
+    mode = "ok";
+    withVideos = true;
+    const page = await openHome(options);
+    await page.locator("#videos-section").scrollIntoViewIfNeeded();
+    return page;
+  }
+
+  test("without videos in the feed the section stays hidden", async () => {
+    withVideos = false;
+    const page = await openHome();
+    assert.equal(await page.isVisible("#videos-section"), false);
+    await page.context().close();
+  });
+
+  test("with videos: the section appears, with native controls, muted, nothing preloaded off screen", async () => {
+    mode = "ok";
+    withVideos = true;
+    // The section is far below the fold on load: nothing should be fetched yet.
+    const page = await openHome({ reducedMotion: true });
+    await page.waitForSelector("#videos-section:not([hidden])", { state: "attached" });
+    assert.deepEqual(await page.$$eval("#video-track video", (videos) => videos.map((video) => video.getAttribute("preload"))), ["none", "none"]);
+    await page.locator("#videos-section").scrollIntoViewIfNeeded();
+    assert.equal(await page.isVisible("#videos-section"), true);
+    assert.equal(await page.locator("#video-track video").count(), 2);
+    const attributes = await page.$eval("#video-track video", (video) => ({
+      controls: video.hasAttribute("controls"),
+      muted: (video as unknown as VideoLike).muted,
+      playsinline: (video as unknown as VideoLike).playsInline,
+    }));
+    assert.deepEqual(attributes, { controls: true, muted: true, playsinline: true });
+    assert.equal(await page.getAttribute("#video-track video", "preload"), "metadata", "on screen, it loads just the metadata");
+    await page.context().close();
+  });
+
+  test("on screen, a video plays muted by itself; only one plays at a time", async () => {
+    const page = await openWithVideos();
+    await page.waitForFunction(() => {
+      const video = (globalThis as unknown as { document: { querySelector(selector: string): VideoLike | null } }).document.querySelector("#video-track video");
+      return video !== null && !video.paused;
+    }, undefined, { timeout: 5000 });
+    await page.$eval("#video-track video >> nth=1", (video) => (video as unknown as VideoLike).play());
+    await page.waitForTimeout(300);
+    const paused = await page.$$eval("#video-track video", (videos) => videos.map((video) => (video as unknown as VideoLike).paused));
+    assert.deepEqual(paused, [true, false]);
+    await page.context().close();
+  });
+
+  test("when a video ends, the carousel moves to the next one", async () => {
+    const page = await openWithVideos({ reducedMotion: true });
+    const before = await page.$eval("#video-track", (track) => (track as unknown as { scrollLeft: number }).scrollLeft);
+    await page.$eval("#video-track video", (video) => video.dispatchEvent(new Event("ended")));
+    await page.waitForTimeout(500);
+    const after = await page.$eval("#video-track", (track) => (track as unknown as { scrollLeft: number }).scrollLeft);
+    assert.notEqual(after, before);
+    await page.context().close();
+  });
+
+  test("if the browser blocks autoplay, the video waits for the play button", async () => {
+    const page = await openWithVideos({ blockAutoplay: true });
+    await page.waitForSelector("#video-track video[data-autoplay='blocked']", { timeout: 5000 });
+    assert.equal(await page.$eval("#video-track video", (video) => (video as unknown as VideoLike).paused), true);
+    assert.equal(await page.$eval("#video-track video", (video) => video.hasAttribute("controls")), true);
+    await page.context().close();
+  });
+
+  test("with prefers-reduced-motion nothing plays by itself", async () => {
+    const page = await openWithVideos({ reducedMotion: true });
+    await page.waitForTimeout(800);
+    assert.equal(await page.$eval("#video-track video", (video) => (video as unknown as VideoLike).paused), true);
     await page.context().close();
   });
 });
