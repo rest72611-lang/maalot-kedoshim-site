@@ -9,6 +9,7 @@ export type LayoutOptions = {
   description?: string;
   currentPath: "/" | "/zmanim/";
   donationStoryCover: FixedAssetImage;
+  logo: FixedAssetImage;
   body: string;
 };
 
@@ -25,7 +26,7 @@ export function renderLayout(options: LayoutOptions): string {
   // navigate back to the home document before the browser can jump to it.
   const donationsHref = currentPath === "/" ? "#donations" : `${homeHref}#donations`;
   const donationStoryHref = toPublicHref(site.basePath, ["assets", "donations", "salvation-story.pdf"]);
-  const { donationStoryCover } = options;
+  const { donationStoryCover, logo } = options;
 
   return `<!doctype html>
 <html lang="${escapeHtml(site.lang)}" dir="${escapeHtml(site.dir)}">
@@ -40,7 +41,10 @@ ${canonicalTag(site, currentPath)}    <link rel="stylesheet" href="${escapeHtml(
     <a class="skip-link" href="#main">דלגו לתוכן המרכזי</a>
     <header class="site-header">
       <div class="container">
-        <a class="site-name" href="${escapeHtml(homeHref)}">${escapeHtml(site.name)}</a>
+        <a class="site-name" href="${escapeHtml(homeHref)}">
+          <img class="site-logo" src="${escapeHtml(logo.url)}" width="${logo.width}" height="${logo.height}" alt="">
+          <span>${escapeHtml(site.name)}</span>
+        </a>
         <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="פתיחת תפריט ניווט">
           <span class="nav-toggle-icon" aria-hidden="true"></span>
         </button>

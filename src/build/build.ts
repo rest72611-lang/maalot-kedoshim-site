@@ -53,7 +53,12 @@ async function build(): Promise<void> {
   await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popups }));
   await writeHtml(
     "zmanim/index.html",
-    renderPrayerTimesPage({ site, prayerSchedule, donationStoryCover: fixedAssets.donationStoryCover }),
+    renderPrayerTimesPage({
+      site,
+      prayerSchedule,
+      donationStoryCover: fixedAssets.donationStoryCover,
+      logo: fixedAssets.logo,
+    }),
   );
 
   await writeRobotsTxt(paths);

@@ -18,10 +18,12 @@ export function renderPrayerTimesPage({
   site,
   prayerSchedule,
   donationStoryCover,
+  logo,
 }: {
   site: SiteInfo;
   prayerSchedule: PrayerSchedule;
   donationStoryCover: FixedAssetImage;
+  logo: FixedAssetImage;
 }): string {
   return renderLayout({
     site,
@@ -29,6 +31,7 @@ export function renderPrayerTimesPage({
     description: PAGE_DESCRIPTION,
     currentPath: "/zmanim/",
     donationStoryCover,
+    logo,
     body: `      <section class="section prayer-page">
         <div class="container">
           <h1>זמני תפילות בבית המדרש</h1>
