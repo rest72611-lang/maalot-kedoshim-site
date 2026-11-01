@@ -3,9 +3,8 @@ import { cp, mkdir, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { toPublicHref } from "../paths.js";
 import { readImageDimensions } from "./image-dimensions.js";
-import { getPdfPageCount, renderPdfPageToPng } from "./poppler.js";
-
-const NOTICE_RENDER_DPI = 180;
+import { NOTICE_RENDER_PRESET } from "./image-optimization.js";
+import { getPdfPageCount, renderPdfPageToJpeg } from "./poppler.js";
 
 export type NoticePage = {
   index: number;
@@ -89,17 +88,17 @@ async function renderNoticePages(options: {
     const fileBaseName = `${slug}-p${paddedIndex}`;
     const outputPrefix = path.join(outputDir, fileBaseName);
 
-    const pngPath = await renderPdfPageToPng({
+    const imagePath = await renderPdfPageToJpeg({
       sourcePath,
       sourceLabel,
       pageNumber,
-      dpi: NOTICE_RENDER_DPI,
+      ...NOTICE_RENDER_PRESET,
       outputPrefix,
     });
 
     let dimensions: { width: number; height: number };
     try {
-      dimensions = await readImageDimensions(pngPath);
+      dimensions = await readImageDimensions(imagePath);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(
@@ -111,7 +110,7 @@ async function renderNoticePages(options: {
       index: pageNumber,
       width: dimensions.width,
       height: dimensions.height,
-      src: toPublicHref(basePath, ["assets", "generated", "notices", `${fileBaseName}.png`]),
+      src: toPublicHref(basePath, ["assets", "generated", "notices", `${fileBaseName}.jpg`]),
     });
   }
 

@@ -2,7 +2,12 @@ import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveSitePath } from "../paths.js";
 import { site } from "../data/site.js";
-import { getPrayerSchedule, validatePrayerSchedule } from "../data/prayer-times.js";
+import {
+  getPrayerSchedule,
+  israelDateKey,
+  validatePrayerSchedule,
+  withoutPastHolidayDays,
+} from "../data/prayer-times.js";
 import { renderHomePage } from "../templates/home.js";
 import { renderPrayerTimesPage } from "../templates/prayer-times.js";
 import { buildFixedAssets } from "./fixed-assets.js";
@@ -11,7 +16,8 @@ import { processNotices } from "./notices.js";
 import { buildPopups } from "./popup.js";
 
 const projectRoot = process.cwd();
-const distDir = path.join(projectRoot, "dist");
+// SITE_DIST_DIR lets the browser tests build a second copy without touching dist/.
+const distDir = path.resolve(projectRoot, process.env.SITE_DIST_DIR ?? "dist");
 const assetsDir = path.join(projectRoot, "assets");
 
 type BuildPaths = {
@@ -37,6 +43,7 @@ async function build(): Promise<void> {
   await copyFixedAssets(paths);
   await copyDonationAssets(paths);
   await copyStyles(paths);
+  await copyClientScripts(paths);
 
   const fixedAssets = await buildFixedAssets({
     distDir,
@@ -47,8 +54,11 @@ async function build(): Promise<void> {
   const notices = await processNotices(paths);
   const activityImages = await processActivityImages(paths);
   const popups = await buildPopups(paths);
-  const prayerSchedule = getPrayerSchedule();
-  validatePrayerSchedule(prayerSchedule);
+  const fullPrayerSchedule = getPrayerSchedule();
+  validatePrayerSchedule(fullPrayerSchedule);
+  // The site is static, so "past" means past at build time; a day drops off
+  // at the next build after it ends in Israel.
+  const prayerSchedule = withoutPastHolidayDays(fullPrayerSchedule, israelDateKey(new Date()));
 
   await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popups }));
   await writeHtml(
@@ -142,6 +152,17 @@ async function copyStyles({ distDir }: BuildPaths): Promise<void> {
   await cp(
     path.join(projectRoot, "src", "styles", "site.css"),
     path.join(distDir, "assets", "styles", "site.css"),
+  );
+}
+
+async function copyClientScripts({ distDir }: BuildPaths): Promise<void> {
+  if (!site.publicApiOrigin) {
+    return;
+  }
+  await mkdir(path.join(distDir, "assets", "client"), { recursive: true });
+  await cp(
+    path.join(projectRoot, ".cache", "client", "prayer-schedule-view.js"),
+    path.join(distDir, "assets", "client", "prayer-schedule-view.js"),
   );
 }
 
