@@ -231,6 +231,47 @@ describe("optimized images", () => {
   });
 });
 
+describe("legacy media manifest", () => {
+  type Ref = { src: string; width: number; height: number };
+  type Item = { legacyId: string; placement: string; kind: string; src?: string; sourceHref?: string; pages?: Ref[] } & Partial<Ref>;
+
+  async function manifest(): Promise<{ version: number; items: Item[] }> {
+    return JSON.parse(await readDistText(path.join("data", "legacy-media.json")));
+  }
+
+  test("lists every gallery photo, notice and popup with a stable, unique id", async () => {
+    const { version, items } = await manifest();
+    assert.equal(version, 1);
+    const ids = items.map((item) => item.legacyId);
+    assert.equal(new Set(ids).size, ids.length, "ids are unique");
+    for (const id of ids) {
+      assert.match(id, /^(activity|notice|popup):[^/\\]+\.(jpe?g|png|pdf)$/i);
+    }
+    assert.deepEqual(ids, [...ids].sort(), "ids are sorted by code unit, so the file is identical on every machine");
+    assert.ok(items.some((item) => item.placement === "gallery"));
+    assert.ok(items.some((item) => item.placement === "notice"));
+    assert.ok(items.some((item) => item.placement === "popup"));
+  });
+
+  test("every file it points to exists in dist", async () => {
+    for (const item of (await manifest()).items) {
+      const refs = [item.src, item.sourceHref, ...(item.pages ?? []).map((page) => page.src)].filter((ref): ref is string => ref !== undefined);
+      assert.ok(refs.length > 0, item.legacyId);
+      for (const ref of refs) {
+        await assertDistFileExists(urlPathToDistFile(ref), item.legacyId);
+      }
+    }
+  });
+
+  test("every image on the home page is in the manifest", async () => {
+    const html = await readDistText("index.html");
+    const listed = new Set((await manifest()).items.flatMap((item) => [item.src, ...(item.pages ?? []).map((page) => page.src)]));
+    for (const match of html.matchAll(/<img class="(?:activity-image|notice-image|popup-image)" src="([^"]+)"/g)) {
+      assert.ok(listed.has(match[1]!.replaceAll("&amp;", "&")), `${match[1]} is not in the manifest`);
+    }
+  });
+});
+
 describe("donation PDF", () => {
   test("is a non-empty PDF, byte-identical to its source asset", async () => {
     await assertDistFileExists(DONATION_PDF, "donation PDF");

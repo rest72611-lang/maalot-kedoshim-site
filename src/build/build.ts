@@ -12,6 +12,7 @@ import { renderHomePage } from "../templates/home.js";
 import { renderPrayerTimesPage } from "../templates/prayer-times.js";
 import { buildFixedAssets } from "./fixed-assets.js";
 import { processActivityImages } from "./activity.js";
+import { buildLegacyMediaManifest, writeLegacyMediaManifest } from "./legacy-media.js";
 import { processNotices } from "./notices.js";
 import { buildPopups } from "./popup.js";
 
@@ -68,6 +69,7 @@ async function build(): Promise<void> {
 
   await writeRobotsTxt(paths);
   await writeSitemap(paths);
+  await writeLegacyMediaManifest(distDir, buildLegacyMediaManifest({ activityImages, notices, popups }));
   await writeSearchConsoleVerification(paths);
 }
 

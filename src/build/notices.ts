@@ -15,6 +15,8 @@ export type NoticePage = {
 
 export type NoticeAsset = {
   title: string;
+  /** The file name in assets/notices/. */
+  sourceName: string;
   sourceHref: string;
   pages: NoticePage[];
 };
@@ -63,6 +65,7 @@ export async function processNotices({ distDir, assetsDir, basePath }: NoticePat
 
     notices.push({
       title,
+      sourceName: entry.name,
       sourceHref: toPublicHref(basePath, ["assets", "notices", entry.name]),
       pages,
     });

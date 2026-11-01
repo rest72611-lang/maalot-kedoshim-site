@@ -12,6 +12,8 @@ export type ActivityImage = {
   height: number;
   alt: string;
   caption: string;
+  /** The file name in assets/activity/, which names the item in the legacy media manifest. */
+  sourceName: string;
 };
 
 export type ActivityPaths = {
@@ -53,6 +55,7 @@ export async function processActivityImages({
       height: dimensions.height,
       alt: caption.length > 0 ? caption : ACTIVITY_IMAGE_ALT,
       caption,
+      sourceName: entry.name,
     });
   }
 
