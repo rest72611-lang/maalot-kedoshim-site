@@ -3,9 +3,9 @@ import { mkdir, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { toPublicHref } from "../paths.js";
 import { readImageDimensions } from "./image-dimensions.js";
-import { renderPdfPageToPng } from "./poppler.js";
+import { POPUP_RENDER_PRESET } from "./image-optimization.js";
+import { renderPdfPageToJpeg } from "./poppler.js";
 
-const POPUP_RENDER_DPI = 200;
 const POPUP_IMAGE_ALT = "מודעה מבית הכנסת מעלות קדושים";
 
 export type PopupAsset = {
@@ -57,13 +57,13 @@ export async function buildPopups({ distDir, assetsDir, basePath }: PopupPaths):
     const outputBaseName = deriveOutputBaseName(entry.name, usedOutputNames);
     const outputPrefix = path.join(outputDir, outputBaseName);
 
-    let pngPath: string;
+    let imagePath: string;
     try {
-      pngPath = await renderPdfPageToPng({
+      imagePath = await renderPdfPageToJpeg({
         sourcePath,
         sourceLabel: entry.name,
         pageNumber: 1,
-        dpi: POPUP_RENDER_DPI,
+        ...POPUP_RENDER_PRESET,
         outputPrefix,
       });
     } catch (error) {
@@ -73,16 +73,16 @@ export async function buildPopups({ distDir, assetsDir, basePath }: PopupPaths):
 
     let dimensions: { width: number; height: number };
     try {
-      dimensions = await readImageDimensions(pngPath);
+      dimensions = await readImageDimensions(imagePath);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Rendered image for popup PDF "${entry.name}" is invalid: ${message}`);
     }
 
-    const version = await hashFile(pngPath);
+    const version = await hashFile(imagePath);
 
     popups.push({
-      src: `${toPublicHref(basePath, ["assets", "popup", `${outputBaseName}.png`])}?v=${version}`,
+      src: `${toPublicHref(basePath, ["assets", "popup", `${outputBaseName}.jpg`])}?v=${version}`,
       width: dimensions.width,
       height: dimensions.height,
       alt: POPUP_IMAGE_ALT,
@@ -96,7 +96,7 @@ export async function buildPopups({ distDir, assetsDir, basePath }: PopupPaths):
 /**
  * Turns a source PDF filename into a safe, unique output basename, so two
  * PDFs whose names collide after slugifying (or share a slug outright)
- * never overwrite each other's rendered PNG.
+ * never overwrite each other's rendered image.
  */
 function deriveOutputBaseName(fileName: string, usedOutputNames: Set<string>): string {
   const stem = path.basename(fileName, path.extname(fileName));

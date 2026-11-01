@@ -5,6 +5,7 @@ import type { PopupAsset } from "../build/popup.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
 import { renderPopup } from "./popup.js";
+import { resolveSitePath } from "../paths.js";
 import { escapeHtml } from "./utils.js";
 
 const HOME_INTRO_LEAD = "מחפש מקום לתפילה, לשיעור או פשוט שעה טובה של תורה באמצע היום?";
@@ -26,13 +27,17 @@ export function renderHomePage({
   fixedAssets: FixedAssets;
   popups: PopupAsset[];
 }): string {
+  // With a public API configured, legacy items carry their manifest id so the
+  // client can hide them, and the lists get ids so it can add new media.
+  // Without one, the markup is exactly the static page.
+  const live = site.publicApiOrigin !== "";
   const noticeItems =
     notices.length > 0
-      ? notices.map(renderNoticeItem).join("\n")
+      ? notices.map((notice) => renderNoticeItem(notice, live)).join("\n")
       : "          <li>אין מודעות להצגה כרגע.</li>";
   const activityItems =
     activityImages.length > 0
-      ? activityImages.map(renderActivityItem).join("\n")
+      ? activityImages.map((image) => renderActivityItem(image, live)).join("\n")
       : "            <p>אין תמונות להצגה כרגע.</p>";
 
   return renderLayout({
@@ -56,7 +61,7 @@ export function renderHomePage({
       <section class="section notices-section">
         <div class="container">
           <h2 class="notices-heading">לוח מודעות</h2>
-          <ul class="notices-grid">
+          <ul class="notices-grid"${live ? ' id="notices-list"' : ""}>
 ${noticeItems}
           </ul>
         </div>
@@ -64,7 +69,7 @@ ${noticeItems}
       <section class="section">
         <div class="container">
           <h2 class="activity-heading">מהנעשה בבית המדרש</h2>
-          <div class="activity-grid">
+          <div class="activity-grid"${live ? ` id="activity-gallery" data-api-origin="${escapeHtml(site.publicApiOrigin)}"` : ""}>
 ${activityItems}
           </div>
         </div>
@@ -77,27 +82,31 @@ ${activityItems}
           </div>
         </div>
       </section>
-${popups.length > 0 ? renderPopup(popups) : ""}`,
+${popups.length > 0 ? renderPopup(popups) : ""}${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
   });
 }
 
-function renderActivityItem(image: ActivityImage): string {
+function legacyIdAttribute(live: boolean, legacyId: string): string {
+  return live ? ` data-legacy-id="${escapeHtml(legacyId)}"` : "";
+}
+
+function renderActivityItem(image: ActivityImage, live: boolean): string {
   const caption =
     image.caption.length > 0
       ? `\n              <figcaption class="activity-caption">${escapeHtml(image.caption)}</figcaption>`
       : "";
 
-  return `            <figure class="activity-figure">
+  return `            <figure class="activity-figure"${legacyIdAttribute(live, `activity:${image.sourceName}`)}>
               <img class="activity-image" src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" loading="lazy">${caption}
             </figure>`;
 }
 
-function renderNoticeItem(notice: NoticeAsset): string {
+function renderNoticeItem(notice: NoticeAsset, live: boolean): string {
   const pageImages = notice.pages
     .map((page) => renderNoticePageImage(page, notice.pages.length))
     .join("\n");
 
-  return `          <li>
+  return `          <li${legacyIdAttribute(live, `notice:${notice.sourceName}`)}>
             <article class="notice-card">
               <figure class="notice-figure">
 ${pageImages}
