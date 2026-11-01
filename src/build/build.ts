@@ -44,6 +44,7 @@ async function build(): Promise<void> {
   await copyFixedAssets(paths);
   await copyDonationAssets(paths);
   await copyStyles(paths);
+  await copyFonts(paths);
   await copyClientScripts(paths);
 
   const fixedAssets = await buildFixedAssets({
@@ -160,6 +161,17 @@ async function copyStyles({ distDir }: BuildPaths): Promise<void> {
     path.join(projectRoot, "src", "styles", "site.css"),
     path.join(distDir, "assets", "styles", "site.css"),
   );
+}
+
+/** Self-hosted Heebo (OFL-1.1): the two subsets the site uses, plus the license. */
+async function copyFonts({ distDir }: BuildPaths): Promise<void> {
+  const source = path.join(projectRoot, "node_modules", "@fontsource-variable", "heebo");
+  const target = path.join(distDir, "assets", "fonts", "heebo");
+  await mkdir(target, { recursive: true });
+  for (const file of ["heebo-hebrew-wght-normal.woff2", "heebo-latin-wght-normal.woff2"]) {
+    await cp(path.join(source, "files", file), path.join(target, file));
+  }
+  await cp(path.join(source, "LICENSE"), path.join(target, "LICENSE"));
 }
 
 async function copyClientScripts({ distDir }: BuildPaths): Promise<void> {

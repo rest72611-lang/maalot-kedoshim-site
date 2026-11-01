@@ -303,6 +303,18 @@ describe("legacy media manifest", () => {
   });
 });
 
+describe("web font", () => {
+  test("Heebo is self-hosted with its OFL license, and the stylesheet points at it", async () => {
+    const css = await readDistText(path.join("assets", "styles", "site.css"));
+    for (const match of css.matchAll(/url\("\.\.\/fonts\/([^"]+)"\)/g)) {
+      await assertDistFileExists(path.join("assets", "fonts", match[1]!), "font referenced by site.css");
+    }
+    assert.match(css, /font-family:\s*"Heebo"/);
+    assert.match(await readDistText(path.join("assets", "fonts", "heebo", "LICENSE")), /SIL Open Font License/);
+    assert.doesNotMatch(css, /fonts\.googleapis|fonts\.gstatic/, "no third-party font requests");
+  });
+});
+
 describe("donation PDF", () => {
   test("is a non-empty PDF, byte-identical to its source asset", async () => {
     await assertDistFileExists(DONATION_PDF, "donation PDF");
