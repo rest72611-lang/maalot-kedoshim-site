@@ -51,6 +51,10 @@ ${rows}
 }
 
 function renderHolidays(holidays: HolidaySchedule[]): string {
+  if (holidays.length === 0) {
+    return "";
+  }
+
   const groups = holidays.map(renderHoliday).join("\n");
 
   return `<section class="schedule-section" aria-labelledby="holidays-heading">
