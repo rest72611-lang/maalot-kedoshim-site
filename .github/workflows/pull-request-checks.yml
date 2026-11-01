@@ -51,6 +51,10 @@ jobs:
       - name: Build site
         run: npm run build
 
+      # Reads dist/ from the previous step, so it must run after the build.
+      - name: Test build output
+        run: npm test
+
       - name: Upload built site
         uses: actions/upload-artifact@v4
         with:
