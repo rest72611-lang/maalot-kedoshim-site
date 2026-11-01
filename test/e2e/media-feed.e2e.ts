@@ -211,7 +211,8 @@ describe("video carousel (P7.4)", () => {
       playsinline: (video as unknown as VideoLike).playsInline,
     }));
     assert.deepEqual(attributes, { controls: true, muted: true, playsinline: true });
-    assert.equal(await page.getAttribute("#video-track video", "preload"), "metadata", "on screen, it loads just the metadata");
+    // On screen it loads just the metadata (the observer fires asynchronously).
+    await page.waitForSelector("#video-track video[preload='metadata']", { state: "attached", timeout: 5000 });
     await page.context().close();
   });
 
