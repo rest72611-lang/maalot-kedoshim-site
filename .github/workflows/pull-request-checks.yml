@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  pr-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
