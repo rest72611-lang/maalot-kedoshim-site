@@ -110,6 +110,40 @@ export function getPrayerSchedule(): PrayerSchedule {
   return prayerSchedule;
 }
 
+const SITE_TIME_ZONE = "Asia/Jerusalem";
+
+/** The calendar date in Israel at `now`, as YYYY-MM-DD. */
+export function israelDateKey(now: Date): string {
+  // en-CA formats dates as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: SITE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+/**
+ * Drops holiday days dated before `todayKey` (YYYY-MM-DD), and any holiday
+ * left with no days. Today's day is kept. Weekday prayers are untouched.
+ */
+export function withoutPastHolidayDays(schedule: PrayerSchedule, todayKey: string): PrayerSchedule {
+  const holidays = schedule.holidays
+    .map((holiday) => ({
+      ...holiday,
+      days: holiday.days.filter((day) => gregorianDateKey(day.gregorianDate) >= todayKey),
+    }))
+    .filter((holiday) => holiday.days.length > 0);
+
+  return { ...schedule, holidays };
+}
+
+/** Converts a validated DD/MM/YYYY date to a sortable YYYY-MM-DD key. */
+function gregorianDateKey(value: string): string {
+  const [day, month, year] = value.split("/");
+  return `${year}-${month}-${day}`;
+}
+
 export function validatePrayerSchedule(schedule: PrayerSchedule): void {
   schedule.regularWeekdays.forEach((prayer, index) => {
     validateNonEmpty(prayer.name, `regularWeekdays[${index}].name`);
@@ -123,7 +157,7 @@ export function validatePrayerSchedule(schedule: PrayerSchedule): void {
       const dayPath = `holidays[${holidayIndex}].days[${dayIndex}]`;
       validateNonEmpty(day.title, `${dayPath}.title`);
       validateNonEmpty(day.hebrewDate, `${dayPath}.hebrewDate`);
-      validateNonEmpty(day.gregorianDate, `${dayPath}.gregorianDate`);
+      validateGregorianDate(day.gregorianDate, `${dayPath}.gregorianDate`);
 
       day.events.forEach((event, eventIndex) => {
         const eventPath = `${dayPath}.events[${eventIndex}]`;
@@ -147,6 +181,25 @@ function validateTime(value: string, path: string): void {
   if (!isStrictTime(value)) {
     throw new Error(
       `Prayer schedule validation failed: ${path} must use strict 24-hour HH:MM format.`,
+    );
+  }
+}
+
+function validateGregorianDate(value: string, path: string): void {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  const day = Number(match?.[1]);
+  const month = Number(match?.[2]);
+  const year = Number(match?.[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    !match ||
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new Error(
+      `Prayer schedule validation failed: ${path} must be a real date in DD/MM/YYYY format.`,
     );
   }
 }

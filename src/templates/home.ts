@@ -5,13 +5,15 @@ import type { PopupAsset } from "../build/popup.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
 import { renderPopup } from "./popup.js";
+import { resolveSitePath } from "../paths.js";
 import { escapeHtml } from "./utils.js";
 
 const HOME_INTRO_LEAD = "מחפש מקום לתפילה, לשיעור או פשוט שעה טובה של תורה באמצע היום?";
 const HOME_INTRO_REST =
   'במעלות קדושים תמיד קורה משהו. תפילות ושיעורים לאורך כל היום, באווירה חמה, ביתית ונגישה ברמת גן. לא צריך להכיר אף אחד ולא צריך להיות "מהקבועים" — פשוט נכנסים, מצטרפים ומרגישים בבית.';
+const DONATION_URL = "https://www.matara.pro/nedarimplus/online/?mosad=7013570";
 const HOME_PAGE_DESCRIPTION =
-  "האתר הרשמי של בית הכנסת מעלות קדושים: זמני תפילות, זמני היום, מודעות, עדכונים ופעילות קהילתית בתקופת חרבות ברזל.";
+  "האתר הרשמי של בית הכנסת מעלות קדושים: זמני תפילות, מודעות, עדכונים ופעילות קהילתית בתקופת חרבות ברזל.";
 
 export function renderHomePage({
   site,
@@ -26,13 +28,17 @@ export function renderHomePage({
   fixedAssets: FixedAssets;
   popups: PopupAsset[];
 }): string {
+  // With a public API configured, legacy items carry their manifest id so the
+  // client can hide them, and the lists get ids so it can add new media.
+  // Without one, the markup is exactly the static page.
+  const live = site.publicApiOrigin !== "";
   const noticeItems =
     notices.length > 0
-      ? notices.map(renderNoticeItem).join("\n")
+      ? notices.map((notice) => renderNoticeItem(notice, live)).join("\n")
       : "          <li>אין מודעות להצגה כרגע.</li>";
   const activityItems =
     activityImages.length > 0
-      ? activityImages.map(renderActivityItem).join("\n")
+      ? activityImages.map((image) => renderActivityItem(image, live)).join("\n")
       : "            <p>אין תמונות להצגה כרגע.</p>";
 
   return renderLayout({
@@ -41,6 +47,7 @@ export function renderHomePage({
     description: HOME_PAGE_DESCRIPTION,
     currentPath: "/",
     donationStoryCover: fixedAssets.donationStoryCover,
+    logo: fixedAssets.logo,
     body: `      <section class="hero" aria-labelledby="home-hero-title">
         <div class="container hero-identity">
           <img class="hero-logo" src="${escapeHtml(fixedAssets.logo.url)}" width="${fixedAssets.logo.width}" height="${fixedAssets.logo.height}" alt="לוגו בית הכנסת מעלות קדושים">
@@ -56,48 +63,62 @@ export function renderHomePage({
       <section class="section notices-section">
         <div class="container">
           <h2 class="notices-heading">לוח מודעות</h2>
-          <ul class="notices-grid">
+          <ul class="notices-grid"${live ? ' id="notices-list"' : ""}>
 ${noticeItems}
           </ul>
         </div>
       </section>
-      <section class="section">
+      <section class="section band-primary">
         <div class="container">
-          <h2 class="activity-heading">מהנעשה בבית המדרש</h2>
-          <div class="activity-grid">
+          <h2 id="activity-heading" class="activity-heading">מהנעשה בבית המדרש</h2>
+          <div class="carousel" data-carousel aria-labelledby="activity-heading">
+            <div class="activity-grid carousel-track"${live ? ` id="activity-gallery" data-api-origin="${escapeHtml(site.publicApiOrigin)}"` : ""}>
 ${activityItems}
+            </div>
           </div>
         </div>
       </section>
-      <section id="donations" class="section" aria-labelledby="donations-heading">
+      <section id="donations" class="section band-tint" aria-labelledby="donations-heading">
         <div class="container">
           <h2 id="donations-heading" class="donations-heading">תרומות לבית המדרש</h2>
-          <div class="donation-qr-wrap">
-            <img class="donation-qr-image" src="${escapeHtml(fixedAssets.donationQr.url)}" width="${fixedAssets.donationQr.width}" height="${fixedAssets.donationQr.height}" alt="קוד QR לתרומות לבית המדרש מעלות קדושים" loading="lazy">
+          <div class="donation-cta-wrap">
+            <a class="donation-cta" href="${escapeHtml(DONATION_URL)}" target="_blank" rel="noopener noreferrer">
+              <svg class="donation-cta-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>לתרומה מאובטחת</span>
+              <span class="visually-hidden">(נפתח בחלון חדש)</span>
+            </a>
           </div>
         </div>
       </section>
-${popups.length > 0 ? renderPopup(popups) : ""}`,
+${popups.length > 0 ? renderPopup(popups) : ""}
+      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/carousel.js"))}"></script>${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
   });
 }
 
-function renderActivityItem(image: ActivityImage): string {
+function legacyIdAttribute(live: boolean, legacyId: string): string {
+  return live ? ` data-legacy-id="${escapeHtml(legacyId)}"` : "";
+}
+
+function renderActivityItem(image: ActivityImage, live: boolean): string {
   const caption =
     image.caption.length > 0
       ? `\n              <figcaption class="activity-caption">${escapeHtml(image.caption)}</figcaption>`
       : "";
 
-  return `            <figure class="activity-figure">
+  return `            <figure class="activity-figure"${legacyIdAttribute(live, `activity:${image.sourceName}`)}>
               <img class="activity-image" src="${escapeHtml(image.src)}" width="${image.width}" height="${image.height}" alt="${escapeHtml(image.alt)}" loading="lazy">${caption}
             </figure>`;
 }
 
-function renderNoticeItem(notice: NoticeAsset): string {
+function renderNoticeItem(notice: NoticeAsset, live: boolean): string {
   const pageImages = notice.pages
     .map((page) => renderNoticePageImage(page, notice.pages.length))
     .join("\n");
 
-  return `          <li>
+  return `          <li${legacyIdAttribute(live, `notice:${notice.sourceName}`)}>
             <article class="notice-card">
               <figure class="notice-figure">
 ${pageImages}

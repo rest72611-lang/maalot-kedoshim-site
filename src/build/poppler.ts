@@ -56,6 +56,40 @@ export async function renderPdfPageToPng(options: {
   return `${outputPrefix}.png`;
 }
 
+export async function renderPdfPageToJpeg(options: {
+  sourcePath: string;
+  sourceLabel: string;
+  pageNumber: number;
+  longEdge: number;
+  quality: number;
+  outputPrefix: string;
+}): Promise<string> {
+  const { sourcePath, sourceLabel, pageNumber, longEdge, quality, outputPrefix } = options;
+
+  try {
+    await execFileAsync("pdftoppm", [
+      "-scale-to",
+      String(longEdge),
+      "-f",
+      String(pageNumber),
+      "-l",
+      String(pageNumber),
+      "-jpeg",
+      "-jpegopt",
+      `quality=${quality},optimize=y`,
+      "-singlefile",
+      sourcePath,
+      outputPrefix,
+    ]);
+  } catch (error) {
+    throw new Error(
+      `Failed to render page ${pageNumber} of PDF "${sourceLabel}" with pdftoppm: ${describePopplerError(error)}`,
+    );
+  }
+
+  return `${outputPrefix}.jpg`;
+}
+
 export function describePopplerError(error: unknown): string {
   if (error && typeof error === "object" && "stderr" in error) {
     const stderr = String((error as { stderr?: unknown }).stderr ?? "").trim();
