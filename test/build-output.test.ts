@@ -8,15 +8,18 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { describe, test } from "node:test";
 import { promisify } from "node:util";
 import {
   getPrayerSchedule,
+  israelDateKey,
   validatePrayerSchedule,
+  withoutPastHolidayDays,
   type PrayerSchedule,
 } from "../src/data/prayer-times.ts";
+import { readImageDimensions } from "../src/build/image-dimensions.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -120,6 +123,20 @@ describe("HTML pages", () => {
     }
   });
 
+  test("the prayer-times page shows no holiday day that ended before the build", async () => {
+    const html = await readDistText(path.join("zmanim", "index.html"));
+    // Yesterday, not today: the build may have run just before midnight.
+    const yesterday = israelDateKey(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const shown = [...html.matchAll(/<span class="gregorian-date" dir="ltr">(\d{2})\/(\d{2})\/(\d{4})<\/span>/g)];
+
+    for (const [date, day, month, year] of shown) {
+      assert.ok(`${year}-${month}-${day}` >= yesterday, `past holiday day ${date} is still shown`);
+    }
+    if (shown.length === 0) {
+      assert.doesNotMatch(html, /id="holidays-heading"/, "an empty holidays section must not render its heading");
+    }
+  });
+
   test("the home page links to the donation PDF", async () => {
     const html = await readDistText("index.html");
     const pdfHref = `/${DONATION_PDF.split(path.sep).join("/")}`;
@@ -166,6 +183,44 @@ describe("Google Search Console verification", () => {
       await readDistText(SEARCH_CONSOLE_FILE),
       `google-site-verification: ${SEARCH_CONSOLE_FILE}\n`,
     );
+  });
+});
+
+describe("optimized images", () => {
+  // Generous ceilings: they catch a regression to full-resolution PNGs or
+  // untouched phone photos, not small tuning changes.
+  const budgets = [
+    { dir: path.join("assets", "generated", "notices"), maxLongEdge: 2000, maxBytes: 1_000_000 },
+    { dir: path.join("assets", "popup"), maxLongEdge: 2000, maxBytes: 1_000_000 },
+    { dir: path.join("assets", "activity"), maxLongEdge: 1600, maxBytes: 800_000 },
+  ];
+
+  for (const { dir, maxLongEdge, maxBytes } of budgets) {
+    test(`dist/${dir.replaceAll("\\", "/")} holds only bounded JPEGs`, async () => {
+      const names = (await readdir(path.join(distDir, dir))).sort();
+      assert.ok(names.length > 0, "expected at least one image");
+
+      for (const name of names) {
+        const filePath = path.join(distDir, dir, name);
+        assert.match(name, /\.jpg$/, `${name} should be a JPEG`);
+        const { width, height } = await readImageDimensions(filePath);
+        assert.ok(Math.max(width, height) <= maxLongEdge, `${name} is ${width}x${height}`);
+        const { size } = await stat(filePath);
+        assert.ok(size <= maxBytes, `${name} is ${size} bytes`);
+      }
+    });
+  }
+
+  test("the donation QR is published byte-identical to its source", async () => {
+    const [published, source] = await Promise.all([
+      readFile(path.join(distDir, "assets", "images", "donation-qr.png")),
+      readFile(path.join(projectRoot, "assets", "images", "donation-qr.png")),
+    ]);
+    assert.ok(published.equals(source));
+  });
+
+  test("source notice PDFs are still published next to their images", async () => {
+    await assertDistFileExists(path.join("assets", "notices", "bar-mitzvah.pdf"), "notice PDF");
   });
 });
 
@@ -230,6 +285,9 @@ describe("prayer schedule validation", () => {
     { name: "blank prayer name", mutate: (s) => { firstWeekdayPrayer(s).name = "   "; }, path: /regularWeekdays\[0\]\.name/ },
     { name: "blank holiday title", mutate: (s) => { const holiday = s.holidays[0]; assert.ok(holiday); holiday.title = ""; }, path: /holidays\[0\]\.title/ },
     { name: "blank Hebrew date", mutate: (s) => { firstHolidayDay(s).hebrewDate = ""; }, path: /holidays\[0\]\.days\[0\]\.hebrewDate/ },
+    { name: "impossible Gregorian date (31/02/2026)", mutate: (s) => { firstHolidayDay(s).gregorianDate = "31/02/2026"; }, path: /holidays\[0\]\.days\[0\]\.gregorianDate/ },
+    { name: "ISO Gregorian date (2026-09-11)", mutate: (s) => { firstHolidayDay(s).gregorianDate = "2026-09-11"; }, path: /holidays\[0\]\.days\[0\]\.gregorianDate/ },
+    { name: "unpadded Gregorian date (1/9/2026)", mutate: (s) => { firstHolidayDay(s).gregorianDate = "1/9/2026"; }, path: /holidays\[0\]\.days\[0\]\.gregorianDate/ },
     {
       name: "invalid holiday event time",
       mutate: (s) => {
@@ -252,6 +310,65 @@ describe("prayer schedule validation", () => {
       });
     });
   }
+});
+
+describe("past holiday days", () => {
+  const schedule: PrayerSchedule = {
+    regularWeekdays: [{ name: "שחרית", time: "06:15" }],
+    holidays: [
+      {
+        title: "חג א",
+        days: [
+          { title: "יום 1", hebrewDate: "א", gregorianDate: "30/09/2026", events: [] },
+          { title: "יום 2", hebrewDate: "ב", gregorianDate: "01/10/2026", events: [] },
+        ],
+      },
+      {
+        title: "חג ב",
+        days: [{ title: "יום 3", hebrewDate: "ג", gregorianDate: "15/10/2026", events: [] }],
+      },
+    ],
+  };
+
+  function shownDays(todayKey: string): string[] {
+    return withoutPastHolidayDays(schedule, todayKey).holidays.flatMap((holiday) =>
+      holiday.days.map((day) => day.gregorianDate),
+    );
+  }
+
+  test("keeps every day when all are in the future", () => {
+    assert.deepEqual(shownDays("2026-09-01"), ["30/09/2026", "01/10/2026", "15/10/2026"]);
+  });
+
+  test("keeps today's day and drops earlier ones, across a month boundary", () => {
+    assert.deepEqual(shownDays("2026-10-01"), ["01/10/2026", "15/10/2026"]);
+  });
+
+  test("drops a holiday once all its days are past", () => {
+    const result = withoutPastHolidayDays(schedule, "2026-10-02");
+    assert.deepEqual(result.holidays.map((holiday) => holiday.title), ["חג ב"]);
+  });
+
+  test("returns no holidays when every day is past, and keeps weekday prayers", () => {
+    const result = withoutPastHolidayDays(schedule, "2026-10-16");
+    assert.deepEqual(result.holidays, []);
+    assert.deepEqual(result.regularWeekdays, schedule.regularWeekdays);
+  });
+
+  test("does not mutate the input schedule", () => {
+    const before = structuredClone(schedule);
+    withoutPastHolidayDays(schedule, "2026-10-16");
+    assert.deepEqual(schedule, before);
+  });
+
+  test("uses the date in Israel, not UTC", () => {
+    // 22:30 UTC on 30 Sep is already 1 Oct in Israel (UTC+3 in summer).
+    assert.equal(israelDateKey(new Date("2026-09-30T22:30:00Z")), "2026-10-01");
+    // 21:30 UTC is still 30 Sep in Israel.
+    assert.equal(israelDateKey(new Date("2026-09-30T20:30:00Z")), "2026-09-30");
+    // Winter time (UTC+2): 22:30 UTC on 1 Dec is 00:30 on 2 Dec in Israel.
+    assert.equal(israelDateKey(new Date("2026-12-01T22:30:00Z")), "2026-12-02");
+  });
 });
 
 function escapeRegExp(value: string): string {

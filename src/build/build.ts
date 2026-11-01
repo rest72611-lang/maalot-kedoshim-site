@@ -2,7 +2,12 @@ import { cp, mkdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveSitePath } from "../paths.js";
 import { site } from "../data/site.js";
-import { getPrayerSchedule, validatePrayerSchedule } from "../data/prayer-times.js";
+import {
+  getPrayerSchedule,
+  israelDateKey,
+  validatePrayerSchedule,
+  withoutPastHolidayDays,
+} from "../data/prayer-times.js";
 import { renderHomePage } from "../templates/home.js";
 import { renderPrayerTimesPage } from "../templates/prayer-times.js";
 import { buildFixedAssets } from "./fixed-assets.js";
@@ -47,8 +52,11 @@ async function build(): Promise<void> {
   const notices = await processNotices(paths);
   const activityImages = await processActivityImages(paths);
   const popups = await buildPopups(paths);
-  const prayerSchedule = getPrayerSchedule();
-  validatePrayerSchedule(prayerSchedule);
+  const fullPrayerSchedule = getPrayerSchedule();
+  validatePrayerSchedule(fullPrayerSchedule);
+  // The site is static, so "past" means past at build time; a day drops off
+  // at the next build after it ends in Israel.
+  const prayerSchedule = withoutPastHolidayDays(fullPrayerSchedule, israelDateKey(new Date()));
 
   await writeHtml("index.html", renderHomePage({ site, notices, activityImages, fixedAssets, popups }));
   await writeHtml(
