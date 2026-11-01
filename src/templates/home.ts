@@ -4,7 +4,7 @@ import type { NoticeAsset, NoticePage } from "../build/notices.js";
 import type { PopupAsset } from "../build/popup.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
-import { renderPopup } from "./popup.js";
+import { renderLivePopupShell, renderPopup } from "./popup.js";
 import { resolveSitePath } from "../paths.js";
 import { escapeHtml } from "./utils.js";
 
@@ -51,7 +51,13 @@ export function renderHomePage({
     body: `      <section class="hero" aria-labelledby="home-hero-title">
         <div class="container hero-identity">
           <img class="hero-logo" src="${escapeHtml(fixedAssets.logo.url)}" width="${fixedAssets.logo.width}" height="${fixedAssets.logo.height}" alt="לוגו בית הכנסת מעלות קדושים">
-          <h1 id="home-hero-title" class="hero-title">בית הכנסת מעלות קדושים לזכר קדושי מלחמת חרבות ברזל</h1>
+          <div class="hero-text">
+            <h1 id="home-hero-title" class="hero-title">בית הכנסת מעלות קדושים לזכר קדושי מלחמת חרבות ברזל</h1>
+            <p class="hero-actions">
+              <a class="hero-action hero-action--primary" href="${escapeHtml(resolveSitePath(site.basePath, "/zmanim/"))}">זמני תפילות</a>
+              <a class="hero-action" href="#donations">לתרומה לבית המדרש</a>
+            </p>
+          </div>
         </div>
         <img class="hero-sign" src="${escapeHtml(fixedAssets.heroSign.url)}" width="${fixedAssets.heroSign.width}" height="${fixedAssets.heroSign.height}" alt="שלט הכניסה לבית הכנסת מעלות קדושים" fetchpriority="high">
       </section>
@@ -93,8 +99,8 @@ ${live ? renderVideoSection() : ""}      <section id="donations" class="section 
           </div>
         </div>
       </section>
-${popups.length > 0 ? renderPopup(popups) : ""}
-      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/carousel.js"))}"></script>${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
+${live ? renderLivePopupShell(site.publicApiOrigin) : popups.length > 0 ? renderPopup(popups) : ""}
+      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/carousel.js"))}"></script>${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/announcement-popup.js"))}"></script>` : ""}`,
   });
 }
 

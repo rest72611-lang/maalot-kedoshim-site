@@ -24,6 +24,9 @@ const VIDEO_IDS = ["01JEXAMPLE0000000000000V01", "01JEXAMPLE0000000000000V02"];
 type Mode = "ok" | "error" | "hostile";
 let mode: Mode = "ok";
 let withVideos = false;
+type PopupMode = "missing" | "none" | "legacy" | "media" | "error";
+let popupMode: PopupMode = "missing";
+const POPUP_MEDIA_ID = "01JEXAMPLE00000000000POPUP";
 let hiddenLegacyId = "";
 let png: Buffer;
 let mp4: Buffer;
@@ -52,6 +55,20 @@ before(async () => {
     const headers = { "Access-Control-Allow-Origin": "*" };
     if (mode === "error") {
       response.writeHead(500, headers).end("{}");
+    } else if (request.url === "/v1/popup") {
+      if (popupMode === "missing") {
+        response.writeHead(404, headers).end();
+      } else if (popupMode === "error") {
+        response.writeHead(500, headers).end("{}");
+      } else {
+        const popup =
+          popupMode === "legacy"
+            ? { source: "legacy", legacyId: "popup:popup.pdf", changedAt: "2027-01-12T10:00:00Z" }
+            : popupMode === "media"
+              ? { source: "media", id: POPUP_MEDIA_ID, url: `/v1/media/${POPUP_MEDIA_ID}`, width: 92, height: 92, caption: "מודעה חדשה", changedAt: "2027-01-12T11:00:00Z" }
+              : null;
+        response.writeHead(200, { ...headers, "Content-Type": "application/json" }).end(JSON.stringify({ popup }));
+      }
     } else if (request.url === "/v1/media-feed") {
       response.writeHead(200, { ...headers, "Content-Type": "application/json" }).end(JSON.stringify(feed()));
     } else if (request.url?.startsWith("/v1/media/01JEXAMPLE0000000000000V")) {
@@ -272,6 +289,72 @@ describe("video carousel (P7.4)", () => {
     const page = await openWithVideos({ reducedMotion: true });
     await page.waitForTimeout(800);
     assert.equal(await page.$eval("#video-track video", (video) => (video as unknown as VideoLike).paused), true);
+    await page.context().close();
+  });
+});
+
+describe("single popup from the API (P7.6)", () => {
+  async function openWithPopup(mode: PopupMode, context?: Awaited<ReturnType<Browser["newContext"]>>): Promise<Page> {
+    popupMode = mode;
+    withVideos = false;
+    const ctx = context ?? (await browser.newContext());
+    const page = await ctx.newPage();
+    await page.goto(`${siteOrigin}/`);
+    await page.waitForSelector("#popup-dialog[data-state]", { state: "attached", timeout: 10_000 });
+    return page;
+  }
+
+  test("a legacy popup: exactly one image, from the site's own manifest", async () => {
+    const page = await openWithPopup("legacy");
+    assert.equal(await page.getAttribute("#popup-dialog", "data-state"), "open");
+    assert.equal(await page.locator("#popup-dialog img").count(), 1);
+    assert.match((await page.getAttribute("#popup-dialog img", "src")) ?? "", /\/assets\/popup\/popup\.jpg/);
+    await page.context().close();
+  });
+
+  test("a media popup: one image from the API", async () => {
+    const page = await openWithPopup("media");
+    assert.equal(await page.locator("#popup-dialog img").count(), 1);
+    assert.match((await page.getAttribute("#popup-dialog img", "src")) ?? "", new RegExp(`/v1/media/${POPUP_MEDIA_ID}$`));
+    assert.equal(await page.getAttribute("#popup-dialog img", "alt"), "מודעה חדשה");
+    await page.context().close();
+  });
+
+  for (const mode of ["none", "error", "missing"] as const) {
+    test(`popup ${mode}: nothing opens, and no built-in popup is used instead`, async () => {
+      const page = await openWithPopup(mode);
+      assert.equal(await page.getAttribute("#popup-dialog", "data-state"), "none");
+      assert.equal(await page.$eval("#popup-dialog", (dialog) => dialog.hasAttribute("open")), false);
+      assert.equal(await page.locator("#popup-dialog img").count(), 0);
+      await page.context().close();
+    });
+  }
+
+  test("each popup is shown once per visitor; Escape closes it and returns focus", async () => {
+    const context = await browser.newContext();
+    const first = await openWithPopup("legacy", context);
+    await first.waitForFunction(() => (globalThis as unknown as { document: { querySelector(s: string): { open: boolean } } }).document.querySelector("#popup-dialog").open);
+    await first.keyboard.press("Escape");
+    await first.waitForFunction(() => !(globalThis as unknown as { document: { querySelector(s: string): { open: boolean } } }).document.querySelector("#popup-dialog").open);
+    await first.close();
+    const second = await openWithPopup("legacy", context);
+    assert.equal(await second.getAttribute("#popup-dialog", "data-state"), "seen");
+    await context.close();
+  });
+
+  test("the whole home page has no serious or critical accessibility violations", async () => {
+    popupMode = "none";
+    withVideos = true;
+    const page = await openHome();
+    await page.addScriptTag({ path: path.join(projectRoot, "node_modules", "axe-core", "axe.min.js") });
+    const violations = await page.evaluate(async () => {
+      const axe = (globalThis as unknown as { axe: { run(options: object): Promise<{ violations: { id: string; impact: string; nodes: { target: string[]; any: { message: string }[] }[] }[] }> } }).axe;
+      const result = await axe.run({ resultTypes: ["violations"] });
+      return result.violations
+        .filter((v) => v.impact === "serious" || v.impact === "critical")
+        .flatMap((v) => v.nodes.map((node) => `${v.id}: ${node.target.join(" ")}: ${node.any[0]?.message ?? ""}`));
+    });
+    assert.deepEqual(violations, []);
     await page.context().close();
   });
 });

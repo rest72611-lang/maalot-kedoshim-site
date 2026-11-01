@@ -177,7 +177,9 @@ async function copyFonts({ distDir }: BuildPaths): Promise<void> {
 /** The carousel always ships; the API-backed scripts only when an API origin is set. */
 async function copyClientScripts({ distDir }: BuildPaths): Promise<void> {
   await mkdir(path.join(distDir, "assets", "client"), { recursive: true });
-  const scripts = site.publicApiOrigin ? ["carousel.js", "prayer-schedule-view.js", "media-feed-view.js"] : ["carousel.js"];
+  const scripts = site.publicApiOrigin
+    ? ["carousel.js", "prayer-schedule-view.js", "media-feed-view.js", "announcement-popup.js"]
+    : ["carousel.js"];
   for (const script of scripts) {
     await cp(path.join(projectRoot, ".cache", "client", script), path.join(distDir, "assets", "client", script));
   }
