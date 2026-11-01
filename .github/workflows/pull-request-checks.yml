@@ -55,6 +55,11 @@ jobs:
       - name: Test build output
         run: npm test
 
+      # Builds a second copy with a fake local API and drives the runner's
+      # preinstalled Google Chrome; never touches dist/.
+      - name: Browser tests
+        run: npm run test:e2e
+
       - name: Upload built site
         uses: actions/upload-artifact@v4
         with:

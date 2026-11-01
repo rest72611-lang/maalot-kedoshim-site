@@ -16,7 +16,8 @@ import { processNotices } from "./notices.js";
 import { buildPopups } from "./popup.js";
 
 const projectRoot = process.cwd();
-const distDir = path.join(projectRoot, "dist");
+// SITE_DIST_DIR lets the browser tests build a second copy without touching dist/.
+const distDir = path.resolve(projectRoot, process.env.SITE_DIST_DIR ?? "dist");
 const assetsDir = path.join(projectRoot, "assets");
 
 type BuildPaths = {
@@ -42,6 +43,7 @@ async function build(): Promise<void> {
   await copyFixedAssets(paths);
   await copyDonationAssets(paths);
   await copyStyles(paths);
+  await copyClientScripts(paths);
 
   const fixedAssets = await buildFixedAssets({
     distDir,
@@ -150,6 +152,17 @@ async function copyStyles({ distDir }: BuildPaths): Promise<void> {
   await cp(
     path.join(projectRoot, "src", "styles", "site.css"),
     path.join(distDir, "assets", "styles", "site.css"),
+  );
+}
+
+async function copyClientScripts({ distDir }: BuildPaths): Promise<void> {
+  if (!site.publicApiOrigin) {
+    return;
+  }
+  await mkdir(path.join(distDir, "assets", "client"), { recursive: true });
+  await cp(
+    path.join(projectRoot, ".cache", "client", "prayer-schedule-view.js"),
+    path.join(distDir, "assets", "client", "prayer-schedule-view.js"),
   );
 }
 

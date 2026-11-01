@@ -137,6 +137,13 @@ describe("HTML pages", () => {
     }
   });
 
+  test("with no public API configured, the schedule is static and no client script ships", async () => {
+    const html = await readDistText(path.join("zmanim", "index.html"));
+    assert.doesNotMatch(html, /id="prayer-schedule"/);
+    assert.doesNotMatch(html, /<script type="module"/);
+    assert.equal(existsSync(path.join(distDir, "assets", "client")), false);
+  });
+
   test("the home page links to the donation PDF", async () => {
     const html = await readDistText("index.html");
     const pdfHref = `/${DONATION_PDF.split(path.sep).join("/")}`;
