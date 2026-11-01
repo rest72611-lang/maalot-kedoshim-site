@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc --outDir .cache/build && node .cache/build/build/build.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node --test test/build-output.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
