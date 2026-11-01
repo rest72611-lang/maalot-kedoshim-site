@@ -8,6 +8,7 @@ import type {
 import type { FixedAssetImage } from "../build/fixed-assets.js";
 import type { SiteInfo } from "../data/site.js";
 import { renderLayout } from "./layout.js";
+import { resolveSitePath } from "../paths.js";
 import { escapeHtml } from "./utils.js";
 
 const PAGE_TITLE = "זמני תפילות | בית הכנסת מעלות קדושים רמת גן";
@@ -18,10 +19,12 @@ export function renderPrayerTimesPage({
   site,
   prayerSchedule,
   donationStoryCover,
+  logo,
 }: {
   site: SiteInfo;
   prayerSchedule: PrayerSchedule;
   donationStoryCover: FixedAssetImage;
+  logo: FixedAssetImage;
 }): string {
   return renderLayout({
     site,
@@ -29,14 +32,41 @@ export function renderPrayerTimesPage({
     description: PAGE_DESCRIPTION,
     currentPath: "/zmanim/",
     donationStoryCover,
+    logo,
     body: `      <section class="section prayer-page">
         <div class="container">
           <h1>זמני תפילות בבית המדרש</h1>
-          ${renderRegularSchedule(prayerSchedule.regularWeekdays)}
-          ${renderHolidays(prayerSchedule.holidays)}
+          ${renderSchedule(site, prayerSchedule)}
         </div>
-      </section>`,
+      </section>${renderLiveScheduleScript(site)}`,
   });
+}
+
+/**
+ * The static schedule is the snapshot. With a public API configured it is
+ * wrapped so the client script can replace it with live times; without one
+ * the markup is exactly the static schedule.
+ */
+function renderSchedule(site: SiteInfo, prayerSchedule: PrayerSchedule): string {
+  const snapshot = `${renderRegularSchedule(prayerSchedule.regularWeekdays)}
+          ${renderHolidays(prayerSchedule.holidays)}`;
+
+  if (!site.publicApiOrigin) {
+    return snapshot;
+  }
+
+  return `<div id="prayer-schedule" class="prayer-schedule" data-api-origin="${escapeHtml(site.publicApiOrigin)}" aria-live="polite">
+          ${snapshot}
+          </div>`;
+}
+
+function renderLiveScheduleScript(site: SiteInfo): string {
+  if (!site.publicApiOrigin) {
+    return "";
+  }
+  const src = resolveSitePath(site.basePath, "assets/client/prayer-schedule-view.js");
+  return `
+      <script type="module" src="${escapeHtml(src)}"></script>`;
 }
 
 function renderRegularSchedule(items: TimedItem[]): string {
@@ -51,6 +81,10 @@ ${rows}
 }
 
 function renderHolidays(holidays: HolidaySchedule[]): string {
+  if (holidays.length === 0) {
+    return "";
+  }
+
   const groups = holidays.map(renderHoliday).join("\n");
 
   return `<section class="schedule-section" aria-labelledby="holidays-heading">
