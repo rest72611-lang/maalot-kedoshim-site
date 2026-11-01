@@ -81,7 +81,7 @@ ${options.body}
     </main>
     <footer class="site-footer">
       <div class="container">
-        <p>כל הזכויות שמורות © אריה שטינברג | <a href="tel:0533105968" dir="ltr">053-310-5968</a></p>
+        <p>כל הזכויות שמורות © אריה שטינברג</p>
       </div>
     </footer>
     <script>
