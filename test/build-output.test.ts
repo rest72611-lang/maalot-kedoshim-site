@@ -35,6 +35,7 @@ const PAGES = [
 ] as const;
 const SEARCH_CONSOLE_FILE = "google9320aa7512ef0293.html";
 const DONATION_PDF = path.join("assets", "donations", "salvation-story.pdf");
+const DONATION_URL = "https://www.matara.pro/nedarimplus/online/?mosad=7013570";
 
 if (!existsSync(distDir)) {
   throw new Error(`dist/ not found at ${distDir}. Run "npm run build" before "npm test".`);
@@ -148,6 +149,22 @@ describe("HTML pages", () => {
     const html = await readDistText("index.html");
     const pdfHref = `/${DONATION_PDF.split(path.sep).join("/")}`;
     assert.ok(localReferences(html).includes(pdfHref), `expected a link to ${pdfHref}`);
+  });
+
+  test("the home donations section links to secure online donation instead of a QR image", async () => {
+    const html = await readDistText("index.html");
+    const section = /<section id="donations"[\s\S]*?<\/section>/.exec(html)?.[0];
+    assert.ok(section, 'home page must have a <section id="donations">');
+
+    const links = [...section.matchAll(/<a\s([^>]*)>([\s\S]*?)<\/a>/g)];
+    assert.equal(links.length, 1, "donations section must contain exactly one link");
+    const [, attributes = "", content = ""] = links[0] ?? [];
+
+    assert.match(attributes, new RegExp(`href="${escapeRegExp(DONATION_URL)}"`), "must link to the secure donation page");
+    assert.match(attributes, /target="_blank"/, "must open in a new tab");
+    assert.match(attributes, /rel="[^"]*\bnoopener\b[^"]*"/, "a new-tab link must use rel=noopener");
+    assert.match(content, /לתרומה מאובטחת/, "must show the button label");
+    assert.doesNotMatch(section, /<img\s/, "the QR image must no longer be shown");
   });
 });
 
