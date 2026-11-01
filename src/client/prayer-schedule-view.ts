@@ -194,3 +194,6 @@ function isIsoDate(value: unknown): value is string {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
+
+// A module, so each script keeps its own scope (they load as type="module").
+export {};

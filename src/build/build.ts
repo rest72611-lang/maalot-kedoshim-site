@@ -162,10 +162,9 @@ async function copyClientScripts({ distDir }: BuildPaths): Promise<void> {
     return;
   }
   await mkdir(path.join(distDir, "assets", "client"), { recursive: true });
-  await cp(
-    path.join(projectRoot, ".cache", "client", "prayer-schedule-view.js"),
-    path.join(distDir, "assets", "client", "prayer-schedule-view.js"),
-  );
+  for (const script of ["prayer-schedule-view.js", "media-feed-view.js"]) {
+    await cp(path.join(projectRoot, ".cache", "client", script), path.join(distDir, "assets", "client", script));
+  }
 }
 
 async function writeHtml(relativePath: string, html: string): Promise<void> {
