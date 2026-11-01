@@ -103,6 +103,20 @@ describe("HTML pages", () => {
         const html = await readDistText(page.file);
         assert.deepEqual(canonicalHrefs(html), [`${PRODUCTION_ORIGIN}${page.route}`]);
       });
+
+      test("the meta description does not promise daily zmanim, which the site does not show", async () => {
+        const html = await readDistText(page.file);
+        const description = firstMatch(html, /<meta name="description" content="([^"]*)">/) ?? "";
+        assert.doesNotMatch(description, /זמני היום/);
+      });
+
+      test("the footer has no phone number or tel: link", async () => {
+        const html = await readDistText(page.file);
+        const footer = firstMatch(html, /<footer class="site-footer">([\s\S]*?)<\/footer>/);
+        assert.ok(footer, "must have a site footer");
+        assert.doesNotMatch(footer, /tel:/);
+        assert.doesNotMatch(footer, /\d{3}-?\d{3}-?\d{4}/);
+      });
     });
   }
 
