@@ -7,7 +7,7 @@
  */
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { describe, test } from "node:test";
@@ -156,7 +156,7 @@ describe("HTML pages", () => {
     const html = await readDistText(path.join("zmanim", "index.html"));
     assert.doesNotMatch(html, /id="prayer-schedule"/);
     assert.doesNotMatch(html, /<script type="module"/);
-    assert.equal(existsSync(path.join(distDir, "assets", "client")), false);
+    assert.deepEqual(readdirSync(path.join(distDir, "assets", "client")), ["carousel.js"], "only the carousel ships without an API");
   });
 
   test("the home page links to the donation PDF", async () => {

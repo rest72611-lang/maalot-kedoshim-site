@@ -70,9 +70,11 @@ ${noticeItems}
       </section>
       <section class="section band-primary">
         <div class="container">
-          <h2 class="activity-heading">מהנעשה בבית המדרש</h2>
-          <div class="activity-grid"${live ? ` id="activity-gallery" data-api-origin="${escapeHtml(site.publicApiOrigin)}"` : ""}>
+          <h2 id="activity-heading" class="activity-heading">מהנעשה בבית המדרש</h2>
+          <div class="carousel" data-carousel aria-labelledby="activity-heading">
+            <div class="activity-grid carousel-track"${live ? ` id="activity-gallery" data-api-origin="${escapeHtml(site.publicApiOrigin)}"` : ""}>
 ${activityItems}
+            </div>
           </div>
         </div>
       </section>
@@ -91,7 +93,8 @@ ${activityItems}
           </div>
         </div>
       </section>
-${popups.length > 0 ? renderPopup(popups) : ""}${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
+${popups.length > 0 ? renderPopup(popups) : ""}
+      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/carousel.js"))}"></script>${live ? `\n      <script type="module" src="${escapeHtml(resolveSitePath(site.basePath, "assets/client/media-feed-view.js"))}"></script>` : ""}`,
   });
 }
 

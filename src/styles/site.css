@@ -1421,3 +1421,85 @@ h2 {
   border-radius: calc(var(--radius-card) - 0.25rem);
   background: var(--color-band);
 }
+
+/* ==========================================================================
+   16. Carousel (P7.3)
+   A CSS scroll-snap track that works with no script (touch, trackpad,
+   scrollbar); src/client/carousel.ts adds buttons, keys and auto-advance.
+   Slides have fixed aspect-ratio images, so nothing shifts while loading.
+   ========================================================================== */
+
+.carousel {
+  position: relative;
+  margin-block-start: var(--space-5);
+}
+
+.carousel-track {
+  display: grid;
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: min(85%, 24rem);
+  gap: var(--space-4);
+  justify-content: start;
+  margin: 0;
+  padding: var(--space-2) var(--space-1) var(--space-4);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline mandatory;
+  scroll-padding-inline: var(--space-1);
+  scrollbar-width: thin;
+}
+
+.carousel-track > * {
+  scroll-snap-align: start;
+}
+
+.carousel-track:focus-visible {
+  outline: 3px solid var(--color-on-primary);
+  outline-offset: 4px;
+}
+
+.carousel-controls {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+}
+
+.carousel-controls[hidden],
+.carousel-button[hidden] {
+  display: none;
+}
+
+.carousel-button {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  padding: 0;
+  border: 2px solid var(--color-on-primary);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.carousel-button:hover,
+.carousel-button[aria-pressed="true"] {
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+}
+
+.carousel-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-track {
+    scroll-behavior: auto;
+  }
+}
