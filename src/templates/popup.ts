@@ -90,6 +90,19 @@ ${items}
       </script>`;
 }
 
+/**
+ * With the platform API on, the popup comes from the API (one image, or
+ * none): this is the empty dialog that announcement-popup.js fills and
+ * opens. It never shows a built-in popup, so one the admin removed can't
+ * reappear when the API is down.
+ */
+export function renderLivePopupShell(apiOrigin: string): string {
+  return `      <dialog id="popup-dialog" class="popup-dialog" aria-label="מודעה מבית הכנסת מעלות קדושים" data-api-origin="${escapeHtml(apiOrigin)}">
+        <button type="button" class="popup-close" aria-label="סגירת המודעה">×</button>
+        <div class="popup-grid"></div>
+      </dialog>`;
+}
+
 function renderPopupItem(popup: PopupAsset): string {
   return `          <figure class="popup-item">
             <img class="popup-image" src="${escapeHtml(popup.src)}" width="${popup.width}" height="${popup.height}" alt="${escapeHtml(popup.alt)}">
