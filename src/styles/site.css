@@ -1147,3 +1147,11 @@ body.popup-open {
     padding: var(--space-4);
   }
 }
+
+.schedule-status {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  font-size: 0.9375rem;
+}
