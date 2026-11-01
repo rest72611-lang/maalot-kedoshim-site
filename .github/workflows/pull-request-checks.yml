@@ -1,0 +1,60 @@
+name: Pull Request Checks
+
+# Verifies that a pull request type-checks and builds, using the same
+# toolchain as deploy.yml. It never deploys: there is no Pages permission,
+# no environment, and no deploy step. The built site is uploaded as a
+# workflow artifact so it can be downloaded and previewed locally.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Poppler (pdfinfo, pdftoppm)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+
+      - name: Verify Poppler
+        run: |
+          pdfinfo -v
+          pdftoppm -v
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build site
+        run: npm run build
+
+      - name: Upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist-pr-${{ github.event.pull_request.number }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
