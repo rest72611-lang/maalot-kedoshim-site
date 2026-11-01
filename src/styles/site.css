@@ -1194,3 +1194,208 @@ body.popup-open {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   font-size: 0.9375rem;
 }
+
+/* ==========================================================================
+   15. Design preview layer
+   Section rhythm, a strong header band, tab-style section titles and unified
+   cards — structure inspired by Nahar Shalom, colors and identity strictly
+   Maalot Kedoshim purple. Kept as one overriding layer so it can be reviewed
+   (or reverted) on its own before being folded into the sections above.
+   ========================================================================== */
+
+:root {
+  --color-primary-dark: #3a1a3e;
+  --color-on-primary: #fbf7f0;
+  --color-band: #f4eef5;
+  --radius-card: 1rem;
+  --space-section: clamp(3rem, 2rem + 4vw, 5.5rem);
+}
+
+body {
+  font-size: 1.0625rem;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 1.25rem + 1.3vw, 2.25rem);
+}
+
+/* ---- Header band ---- */
+
+.site-header {
+  background: var(--color-primary);
+  border-block-end: 4px solid var(--color-accent);
+}
+
+.site-header .container {
+  padding-block: var(--space-3);
+}
+
+.site-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-on-primary);
+}
+
+.site-logo {
+  inline-size: 3.25rem;
+  block-size: 3.25rem;
+  padding: 0.3rem;
+  border-radius: 50%;
+  background: #ffffff;
+  object-fit: contain;
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.45);
+}
+
+.nav-link {
+  color: var(--color-on-primary);
+  font-size: 1.0625rem;
+}
+
+.nav-link[aria-current="page"] {
+  color: #ffffff;
+  border-block-end-color: var(--color-accent);
+}
+
+.nav-toggle {
+  border-color: rgba(251, 247, 240, 0.45);
+  background: transparent;
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 47.9375rem) {
+  .site-nav {
+    border-block-start-color: rgba(251, 247, 240, 0.25);
+  }
+}
+
+/* ---- Hero ---- */
+
+.hero {
+  background: linear-gradient(to bottom, var(--color-band), var(--color-bg));
+}
+
+.hero-title {
+  color: var(--color-primary);
+  font-size: clamp(1.875rem, 1.4rem + 2.2vw, 3.25rem);
+}
+
+/* ---- Tab-style section titles: hang from the top edge of their section ---- */
+
+.notices-heading,
+.activity-heading,
+.donations-heading {
+  display: table;
+  margin-block: calc(-1 * var(--space-section)) var(--space-5);
+  margin-inline-start: 0;
+  padding: var(--space-3) var(--space-6);
+  border-radius: 0 0 1.25rem 1.25rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-soft);
+}
+
+.notices-heading::after,
+.activity-heading::after,
+.donations-heading::after {
+  inset-inline-start: var(--space-6);
+  inset-block-end: var(--space-2);
+  inline-size: 2.5rem;
+}
+
+.donations-heading {
+  margin-inline: auto;
+}
+
+/* ---- Alternating section bands ---- */
+
+.band-primary {
+  background: var(--color-primary);
+}
+
+.band-primary .activity-heading {
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+}
+
+.band-tint {
+  background: var(--color-band);
+}
+
+/* ---- Unified cards ---- */
+
+.notice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.notice-figure {
+  border-radius: calc(var(--radius-card) - 0.25rem);
+  box-shadow: none;
+}
+
+.activity-figure {
+  border-radius: var(--radius-card);
+}
+
+.activity-caption {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Secondary button: the outlined counterpart of .donation-cta. */
+.notice-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.75rem;
+  margin-block-start: var(--space-3);
+  padding: var(--space-2) var(--space-5);
+  border: 2px solid var(--color-primary);
+  border-radius: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.notice-link:hover,
+.notice-link:focus-visible {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* ---- Footer band ---- */
+
+.site-footer {
+  background: var(--color-primary-dark);
+  border-block-start: 4px solid var(--color-accent);
+  color: var(--color-on-primary);
+}
+
+.site-footer a {
+  color: #ffffff;
+}
+
+/* ---- Prayer-times page: schedules as cards ---- */
+
+.prayer-page h1 {
+  color: var(--color-primary);
+}
+
+.schedule-section {
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.holiday-day {
+  padding: var(--space-4);
+  border-radius: calc(var(--radius-card) - 0.25rem);
+  background: var(--color-band);
+}
