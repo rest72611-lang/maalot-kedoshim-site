@@ -215,17 +215,38 @@ describe("video carousel (P7.4)", () => {
     await page.context().close();
   });
 
-  test("on screen, a video plays muted by itself; only one plays at a time", async () => {
-    const page = await openWithVideos();
-    await page.waitForFunction(() => {
-      const video = (globalThis as unknown as { document: { querySelector(selector: string): VideoLike | null } }).document.querySelector("#video-track video");
-      return video !== null && !video.paused;
-    }, undefined, { timeout: 5000 });
-    await page.$eval("#video-track video >> nth=1", (video) => (video as unknown as VideoLike).play());
-    await page.waitForTimeout(300);
-    const paused = await page.$$eval("#video-track video", (videos) => videos.map((video) => (video as unknown as VideoLike).paused));
-    assert.deepEqual(paused, [true, false]);
-    await page.context().close();
+  test("on screen, a video is asked to play; when one plays, the others pause", async () => {
+    // Whether a headless browser can actually decode the clip depends on the
+    // platform's codecs, so this checks what our code does: it calls play()
+    // on the visible video, and pauses the others when one starts playing.
+    mode = "ok";
+    withVideos = true;
+    const context = await browser.newContext();
+    await context.addInitScript(() => {
+      const scope = globalThis as unknown as { __calls: string[]; HTMLMediaElement: { prototype: { play(): Promise<void>; pause(): void } } };
+      scope.__calls = [];
+      const proto = scope.HTMLMediaElement.prototype;
+      const label = (element: unknown) => (element as { getAttribute(name: string): string | null }).getAttribute("aria-label") ?? "";
+      proto.play = function (this: unknown) {
+        scope.__calls.push(`play:${label(this)}`);
+        return Promise.resolve();
+      };
+      proto.pause = function (this: unknown) {
+        scope.__calls.push(`pause:${label(this)}`);
+      };
+    });
+    const page = await context.newPage();
+    await page.goto(`${siteOrigin}/`);
+    await page.waitForSelector("#activity-gallery[data-source]");
+    await page.locator("#videos-section").scrollIntoViewIfNeeded();
+    const calls = () => page.evaluate(() => (globalThis as unknown as { __calls: string[] }).__calls);
+    await page.waitForFunction(() => (globalThis as unknown as { __calls: string[] }).__calls.includes("play:סרטון 1"), undefined, { timeout: 5000 });
+
+    // Pretend the first video is playing, then start the second one.
+    await page.$eval("#video-track video", (video) => Object.defineProperty(video, "paused", { value: false, configurable: true }));
+    await page.$eval("#video-track video >> nth=1", (video) => video.dispatchEvent(new Event("play")));
+    assert.ok((await calls()).includes("pause:סרטון 1"), (await calls()).join(", "));
+    await context.close();
   });
 
   test("when a video ends, the carousel moves to the next one", async () => {
