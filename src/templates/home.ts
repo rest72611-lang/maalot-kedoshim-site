@@ -10,6 +10,7 @@ import { escapeHtml } from "./utils.js";
 const HOME_INTRO_LEAD = "מחפש מקום לתפילה, לשיעור או פשוט שעה טובה של תורה באמצע היום?";
 const HOME_INTRO_REST =
   'במעלות קדושים תמיד קורה משהו. תפילות ושיעורים לאורך כל היום, באווירה חמה, ביתית ונגישה ברמת גן. לא צריך להכיר אף אחד ולא צריך להיות "מהקבועים" — פשוט נכנסים, מצטרפים ומרגישים בבית.';
+const DONATION_URL = "https://www.matara.pro/nedarimplus/online/?mosad=7013570";
 const HOME_PAGE_DESCRIPTION =
   "האתר הרשמי של בית הכנסת מעלות קדושים: זמני תפילות, זמני היום, מודעות, עדכונים ופעילות קהילתית בתקופת חרבות ברזל.";
 
@@ -72,8 +73,15 @@ ${activityItems}
       <section id="donations" class="section" aria-labelledby="donations-heading">
         <div class="container">
           <h2 id="donations-heading" class="donations-heading">תרומות לבית המדרש</h2>
-          <div class="donation-qr-wrap">
-            <img class="donation-qr-image" src="${escapeHtml(fixedAssets.donationQr.url)}" width="${fixedAssets.donationQr.width}" height="${fixedAssets.donationQr.height}" alt="קוד QR לתרומות לבית המדרש מעלות קדושים" loading="lazy">
+          <div class="donation-cta-wrap">
+            <a class="donation-cta" href="${escapeHtml(DONATION_URL)}" target="_blank" rel="noopener noreferrer">
+              <svg class="donation-cta-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <span>לתרומה מאובטחת</span>
+              <span class="visually-hidden">(נפתח בחלון חדש)</span>
+            </a>
           </div>
         </div>
       </section>
